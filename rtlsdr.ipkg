@@ -1,0 +1,32 @@
+package rtlsdr
+version = 0.1.0
+authors = "Edward O'Callaghan"
+-- maintainers =
+-- license = BSD2
+brief = "package that provides low level bindings to rtlsdr"
+-- readme = README.md
+-- homepage =
+-- sourceloc =
+-- bugtracker =
+
+-- the Idris2 version required (e.g. langversion >= 0.5.1)
+-- langversion
+
+-- packages to add to search path
+-- depends =
+
+-- modules to install
+modules = Bindings.RtlSdr
+	, Bindings.RtlSdr.Buffer
+	, Bindings.RtlSdr.Device
+	, Bindings.RtlSdr.Frequency
+	, Bindings.RtlSdr.Gain
+	, Bindings.RtlSdr.Sampling
+	, Bindings.RtlSdr.Misc
+
+-- opts = "-p effects"
+sourcedir = "src"
+
+prebuild = "make -C src"
+postinstall = "make -C src install"
+postclean = "make -C src clean"
