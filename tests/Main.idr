@@ -5,9 +5,12 @@ import Bindings.RtlSdr
 testOpenClose : IO ()
 testOpenClose = do
   putStrLn "opening RTL SDR idx 0"
-  _ <- rtlsdr_open 0
-  --if (Just h) then close h else putStrLn "Failed to open"
-  putStrLn "Done"
+  h <- rtlsdr_open 0
+  case h of
+       Nothing => putStrLn "Failed to open"
+       Just h_ok => do
+--         _ <- close h_ok
+         putStrLn "Done"
 
 main : IO ()
 main = do
