@@ -23,7 +23,7 @@ export
 rtlsdr_open : Int -> IO (Maybe RtlSdrHandle)
 rtlsdr_open idx = do
     res <- idris_rtlsdr_open idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
-    is_null <- idris_is_null res -- nullPtr res
+    let is_null = prim__nullAnyPtr res == 0
     io_pure $ if is_null then Nothing else Just (MkDevice res)
 
 
