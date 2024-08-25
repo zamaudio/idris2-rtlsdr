@@ -1,13 +1,15 @@
 module Bindings.RtlSdr.Device
 
+-- Device handle data type.
 export
 data RtlSdrHandle = MkDevice AnyPtr
 
+-- librtlsdr binding helper.
 public export
 librtlsdr : String -> String
 librtlsdr fn = "C:" ++ "rtlsdr_" ++ fn ++ ",librtlsdr"
 
-
+-- wrapper C func helper.
 idris_rtlsdr : String -> String
 idris_rtlsdr fn = "C:" ++ "idris_" ++ fn ++ ",idris_rtlsdr"
 
