@@ -1,5 +1,7 @@
+support/rtlsdr-idris
+build/
+lib/
 *.ibc
 *.o
 *.a
 *.so
-build/

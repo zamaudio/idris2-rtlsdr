@@ -27,6 +27,6 @@ modules = Bindings.RtlSdr
 -- opts = "-p effects"
 sourcedir = "src"
 
-prebuild = "make -C src"
-postinstall = "make -C src install"
-postclean = "make -C src clean"
+prebuild = "make -C support"
+postinstall = "make -C support install"
+postclean = "make -C support clean"
