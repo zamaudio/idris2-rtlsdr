@@ -6,7 +6,8 @@ import System.FFI
 
 -- Device handle data type.
 export
-data RtlSdrHandle = MkDevice AnyPtr
+-- data RtlSdrHandle = MkDevice AnyPtr
+data RtlSdrHandle : Type where [external]
 
 -- librtlsdr binding helper.
 public export
@@ -26,28 +27,31 @@ get_device_name: Int -> String
 
 
 -- wrapper C func helper.
-idris_rtlsdr : String -> String
-idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
+-- idris_rtlsdr : String -> String
+-- idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
 
 -- RTLSDR_API int rtlsdr_open(rtlsdr_dev_t **dev, uint32_t index);
+%foreign (librtlsdr "open")
+open_prim: Ptr RtlSdrHandle -> Int -> PrimIO Int
+
 -- XXX support/ runtime wraps
-%foreign (idris_rtlsdr "open")
-idris_rtlsdr_open : AnyPtr -> Int -> PrimIO Int
+-- %foreign (idris_rtlsdr "open")
+-- idris_rtlsdr_open : AnyPtr -> Int -> PrimIO Int
 
 export
-rtlsdr_open : Int -> IO (Maybe RtlSdrHandle)
+rtlsdr_open : Int -> IO (Maybe (Ptr RtlSdrHandle))
 rtlsdr_open idx = do
-  let p : AnyPtr -- underlying C library will allocate device handle resource
-  res <- fromPrim $ idris_rtlsdr_open p idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
-  io_pure $ if res == 0 then Just (MkDevice p) else Nothing
+  let p = prim__castPtr $ prim__getNullAnyPtr -- underlying C library will allocate device handle resource
+  res <- fromPrim $ open_prim p idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
+  io_pure $ if res == 0 then Just p else Nothing
 
 
 -- RTLSDR_API int rtlsdr_close(rtlsdr_dev_t *dev);
 %foreign (librtlsdr "close")
-close: AnyPtr -> PrimIO Int
+close: Ptr RtlSdrHandle -> PrimIO Int
 
 export
-rtlsdr_close: RtlSdrHandle -> IO ()
-rtlsdr_close (MkDevice h) = do
+rtlsdr_close: Ptr RtlSdrHandle -> IO ()
+rtlsdr_close h = do
   _ <- fromPrim $ close h
   io_pure ()
