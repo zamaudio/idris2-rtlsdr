@@ -1,0 +1,10 @@
+[custom.all.rtlsdr]
+type = "local"
+path = "."
+ipkg = "rtlsdr.ipkg"
+test = "test/test.ipkg"
+
+[custom.all.rtlsdr-test]
+type = "local"
+path = "test"
+ipkg = "test.ipkg"
