@@ -1,8 +1,7 @@
 TARGET = rtlsdr-idris
 TARGET_VERSION ?= 0.1.0
 
-IDRIS := idris2
-INSTALLDIR = `${IDRIS} --libdir`/rtlsdr-0.1.0/
+INSTALLDIR = ../lib
 
 LDFLAGS = `pkg-config --libs librtlsdr`
 
@@ -16,10 +15,12 @@ $(TARGET): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) $(TARGET).so
+	rm -rf $(INSTALLDIR)
 
 .PHONY: install
 install:
+	mkdir -p $(INSTALLDIR)
 	cp $(TARGET) $(TARGET).so
 	install $(TARGET).so $(wildcard *.h) $(INSTALLDIR)
 
