@@ -2,6 +2,8 @@ module Bindings.RtlSdr.Gain
 
 import Bindings.RtlSdr.Device
 
+%default total
+
 -- RTLSDR_API int rtlsdr_get_tuner_gains(rtlsdr_dev_t *dev, int *gains);
 export
 %foreign (librtlsdr "get_tuner_gains")

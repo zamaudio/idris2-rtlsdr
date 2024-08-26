@@ -2,6 +2,8 @@ module Bindings.RtlSdr.Sampling
 
 import Bindings.RtlSdr.Device
 
+%default total
+
 -- RTLSDR_API int rtlsdr_set_sample_rate(rtlsdr_dev_t *dev, uint32_t rate);
 export
 %foreign (librtlsdr "set_sample_rate")

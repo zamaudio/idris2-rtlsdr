@@ -2,6 +2,8 @@ module Bindings.RtlSdr.Buffer
 
 import Bindings.RtlSdr.Device
 
+%default total
+
 -- RTLSDR_API int rtlsdr_reset_buffer(rtlsdr_dev_t *dev);
 export
 %foreign (librtlsdr "reset_buffer")

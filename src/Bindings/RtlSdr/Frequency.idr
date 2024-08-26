@@ -2,6 +2,8 @@ module Bindings.RtlSdr.Frequency
 
 import Bindings.RtlSdr.Device
 
+%default total
+
 -- RTLSDR_API int rtlsdr_set_xtal_freq(rtlsdr_dev_t *dev, uint32_t rtl_freq, uint32_t tuner_freq);
 export
 %foreign (librtlsdr "set_xtal_freq")

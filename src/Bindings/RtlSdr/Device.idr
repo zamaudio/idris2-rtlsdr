@@ -1,5 +1,7 @@
 module Bindings.RtlSdr.Device
 
+%default total
+
 -- Device handle data type.
 export
 data RtlSdrHandle = MkDevice AnyPtr
