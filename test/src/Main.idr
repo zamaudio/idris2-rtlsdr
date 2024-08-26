@@ -9,6 +9,7 @@ testOpenClose = do
   case h of
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
+      putStrLn $ show $ rtlsdr_get_tuner_type h
       putStrLn "Done, closing.."
       rtlsdr_close h
 
