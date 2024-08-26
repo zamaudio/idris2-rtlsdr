@@ -13,6 +13,8 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CC) -fPIC -shared $(LDFLAGS) -o $@ $^
 
+DYLIB_WORKAROUND = cp $(TARGET) $(TARGET).so
+
 .PHONY: clean
 clean:
 	rm -f $(OBJS) $(TARGET) $(TARGET).so
@@ -21,6 +23,6 @@ clean:
 .PHONY: install
 install:
 	mkdir -p $(INSTALLDIR)
-	cp $(TARGET) $(TARGET).so
+	$(DYLIB_WORKAROUND)
 	install $(TARGET).so $(wildcard *.h) $(INSTALLDIR)
 
