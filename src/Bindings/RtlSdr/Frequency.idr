@@ -34,4 +34,3 @@ set_freq_correction: Ptr RtlSdrHandle -> Int -> Int
 export
 %foreign (librtlsdr "get_freq_correction")
 get_freq_correction: Ptr RtlSdrHandle -> Int
-

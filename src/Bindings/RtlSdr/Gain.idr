@@ -33,4 +33,3 @@ set_tuner_if_gain: Ptr RtlSdrHandle -> Int -> Int
 export
 %foreign (librtlsdr "set_tuner_gain_mode")
 set_tuner_gain_mode: Ptr RtlSdrHandle -> Int -> Int
-

@@ -28,4 +28,3 @@ set_direct_sampling: Ptr RtlSdrHandle -> Int -> Int
 export
 %foreign (librtlsdr "get_direct_sampling")
 get_direct_sampling: Ptr RtlSdrHandle -> Int
-
