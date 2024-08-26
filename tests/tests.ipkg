@@ -1,4 +1,0 @@
-package test
-
-sourcedir = "tests"
-opts = "-p rtlsdr --warnreach --partial-eval"

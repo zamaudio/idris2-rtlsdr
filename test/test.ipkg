@@ -1,0 +1,6 @@
+package test
+depends = rtlsdr
+sourcedir = "src"
+main = Main
+executable = "rtlsdr-test"
+opts = "-p rtlsdr --warnreach --partial-eval"
