@@ -10,6 +10,12 @@ testOpenClose = do
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
       putStrLn $ show $ rtlsdr_get_tuner_type h
+      let o = get_offset_tuning h
+      putStrLn $ "Tuner offset: " ++ (show o)
+      let g = get_tuner_gain h
+      putStrLn $ "Gain: " ++ (show g)
+      let f = get_center_freq h
+      putStrLn $ "Freq: " ++ (show f)
       putStrLn "Done, closing.."
       rtlsdr_close h
 
