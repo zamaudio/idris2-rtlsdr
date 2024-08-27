@@ -7,7 +7,7 @@ import Bindings.RtlSdr.Device
 -- RTLSDR_API int rtlsdr_reset_buffer(rtlsdr_dev_t *dev);
 export
 %foreign (librtlsdr "reset_buffer")
-reset_buffer: Ptr RtlSdrHandle -> Int
+reset_buffer: Ptr RtlSdrHandle -> PrimIO Int
 
 -- RTLSDR_API int rtlsdr_read_sync(rtlsdr_dev_t *dev, void *buf, int len, int *n_read);
 export
