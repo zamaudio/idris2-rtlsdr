@@ -1,4 +1,4 @@
-RtlSdr is an idris package that provides low level bindings to rtlsdr high
+RtlSdr is an Idris2 package that provides low level bindings to rtlsdr high
 level RTLSDR effects.
 
 # Req
