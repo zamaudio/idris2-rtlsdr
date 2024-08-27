@@ -12,10 +12,10 @@ reset_buffer: Ptr RtlSdrHandle -> PrimIO Int
 -- RTLSDR_API int rtlsdr_read_sync(rtlsdr_dev_t *dev, void *buf, int len, int *n_read);
 export
 %foreign (librtlsdr "read_sync")
-read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> Int
+read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
 
 -- typedef void(*rtlsdr_read_async_cb_t)(unsigned char *buf, uint32_t len, void *ctx);
-ReadAsyncFn = String -> Int -> AnyPtr
+ReadAsyncFn = String -> Int -> AnyPtr -> PrimIO ()
 
 -- RTLSDR_API int rtlsdr_wait_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx);
 export

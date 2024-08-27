@@ -19,6 +19,9 @@ testOpenClose = do
       putStrLn "Done, closing.."
       rtlsdr_close h
 
+readasync : ReadAsyncFn
+readasync b s ctx = ?undefined
+
 testAM : IO ()
 testAM = do
   putStrLn "opening RTL SDR idx 0"
@@ -41,6 +44,11 @@ testAM = do
       _ <- fromPrim $ reset_buffer h
 
       -- read_sync(device, buffer, buffer_len, &len);
+      -- read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
+      let b = prim__getNullAnyPtr
+      let bl = 256
+      let rl : Ptr Int
+      _ <- fromPrim $ read_sync h b bl rl
 
       putStrLn "Done, closing.."
       rtlsdr_close h
