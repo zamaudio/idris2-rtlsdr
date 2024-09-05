@@ -27,23 +27,25 @@ get_device_name: Int -> String
 
 
 -- wrapper C func helper.
--- idris_rtlsdr : String -> String
--- idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
+idris_rtlsdr : String -> String
+idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
 
 -- RTLSDR_API int rtlsdr_open(rtlsdr_dev_t **dev, uint32_t index);
 %foreign (librtlsdr "open")
 open_prim: Ptr RtlSdrHandle -> Int -> PrimIO Int
 
 -- XXX support/ runtime wraps
--- %foreign (idris_rtlsdr "open")
--- idris_rtlsdr_open : AnyPtr -> Int -> PrimIO Int
+%foreign (idris_rtlsdr "open")
+idris_rtlsdr_open : Int -> PrimIO AnyPtr
 
 export
 rtlsdr_open : Int -> IO (Maybe (Ptr RtlSdrHandle))
 rtlsdr_open idx = do
-  let p = prim__castPtr $ prim__getNullAnyPtr -- underlying C library will allocate device handle resource
-  res <- fromPrim $ open_prim p idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
-  io_pure $ if res == 0 then Just p else Nothing
+  -- let p = prim__getNullAnyPtr -- underlying C library will allocate device handle resource
+  -- res <- fromPrim $ open_prim (prim__castPtr p) idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
+  -- io_pure $ if res == 0 then Just (prim__castPtr p) else Nothing
+  p <- fromPrim $ idris_rtlsdr_open idx
+  io_pure $ Just $ prim__castPtr p
 
 
 -- RTLSDR_API int rtlsdr_close(rtlsdr_dev_t *dev);
