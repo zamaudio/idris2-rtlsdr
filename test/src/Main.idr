@@ -37,6 +37,9 @@ testAM = do
       let f = get_center_freq h
       putStrLn $ "Freq set to: " ++ (show f)
 
+      let fc = get_freq_correction h
+      putStrLn $ "Freq correction set to: " ++ (show fc)
+
       -- flush buffer
       _ <- fromPrim $ reset_buffer h
 
