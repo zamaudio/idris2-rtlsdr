@@ -19,9 +19,6 @@ testOpenClose = do
       putStrLn "Done, closing.."
       rtlsdr_close h
 
-readasync : ReadAsyncFn
-readasync b s ctx = ?undefined
-
 testAM : IO ()
 testAM = do
   putStrLn "opening RTL SDR idx 0"
