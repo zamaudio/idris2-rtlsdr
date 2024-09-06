@@ -4,6 +4,7 @@ TARGET_VERSION ?= 0.1.0
 INSTALLDIR = ../lib
 
 LDFLAGS = `pkg-config --libs librtlsdr`
+CFLAGS += -fPIC
 
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
