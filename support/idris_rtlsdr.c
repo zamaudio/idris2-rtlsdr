@@ -11,4 +11,8 @@ void * idris_rtlsdr_open(uint32_t index)
 	return dev;
 }
 
+int idris_rtlsdr_read_refint(const int *p)
+{
+	return *p;
+}
 

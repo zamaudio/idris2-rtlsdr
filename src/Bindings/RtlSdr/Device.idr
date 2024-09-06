@@ -38,6 +38,11 @@ open_prim: Ptr RtlSdrHandle -> Int -> PrimIO Int
 %foreign (idris_rtlsdr "open")
 idris_rtlsdr_open : Int -> PrimIO AnyPtr
 
+-- XXX support/.. int read_refint(int *p);
+export
+%foreign (idris_rtlsdr "read_refint")
+idris_rtlsdr_read_refint : Ptr Int -> Int
+
 export
 rtlsdr_open : Int -> IO (Maybe (Ptr RtlSdrHandle))
 rtlsdr_open idx = do

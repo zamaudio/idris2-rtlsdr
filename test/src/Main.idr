@@ -1,6 +1,7 @@
 module Main
 
 import Bindings.RtlSdr
+import System.FFI
 
 testOpenClose : IO ()
 testOpenClose = do
@@ -45,10 +46,18 @@ testAM = do
 
       -- read_sync(device, buffer, buffer_len, &len);
       -- read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
-      let b = prim__getNullAnyPtr
-      let bl = 256
-      let rl : Ptr Int
-      _ <- fromPrim $ read_sync h b bl rl
+      let bl = 8192 -- buffer length
+      b <- malloc bl -- prim__getNullAnyPtr -- buffer
+      l <- prim__castPtr <$> malloc 1 --: Ptr Int -- read length
+      _ <- fromPrim $ read_sync h b bl l
+
+      let lref = idris_rtlsdr_read_refint l
+      free $ prim__forgetPtr l
+      putStrLn $ "read buffer length = " ++ (show lref)
+
+      -- print out the buffer
+
+      free b
 
       putStrLn "Done, closing.."
       rtlsdr_close h
