@@ -1,6 +1,8 @@
 module Bindings.RtlSdr.Misc
 
 import Bindings.RtlSdr.Device
+import Bindings.RtlSdr.Error
+import Bindings.RtlSdr.Raw.Misc
 
 %default total
 
@@ -25,31 +27,18 @@ toTunerType 5 = RTLSDR_TUNER_R820T
 toTunerType 6 = RTLSDR_TUNER_R828D
 toTunerType _ = RTLSDR_TUNER_UNKNOWN
 
--- RTLSDR_API enum rtlsdr_tuner rtlsdr_get_tuner_type(rtlsdr_dev_t *dev);
-%foreign (librtlsdr "get_tuner_type")
-get_tuner_type: Ptr RtlSdrHandle -> Int
+export
+getTunerType : Ptr RtlSdrHandle -> TunerType
+getTunerType h = toTunerType $ get_tuner_type h
 
 export
-rtlsdr_get_tuner_type : Ptr RtlSdrHandle -> TunerType
-rtlsdr_get_tuner_type h = toTunerType $ get_tuner_type h
+setOffsetTuning : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
+setOffsetTuning h t = do
+  r <- fromPrim $ set_offset_tuning h (if t == False then 0 else 1)
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_set_offset_tuning(rtlsdr_dev_t *dev, int on);
 export
-%foreign (librtlsdr "set_offset_tuning")
-set_offset_tuning: Ptr RtlSdrHandle -> Int -> Int
-
--- RTLSDR_API int rtlsdr_get_offset_tuning(rtlsdr_dev_t *dev);
-export
-%foreign (librtlsdr "get_offset_tuning")
-get_offset_tuning: Ptr RtlSdrHandle -> Int
-
-
--- RTLSDR_API int rtlsdr_set_bias_tee(rtlsdr_dev_t *dev, int on);
-export
-%foreign (librtlsdr "set_bias_tee")
-set_bias_tee: Ptr RtlSdrHandle -> Int -> Int
-
--- RTLSDR_API int rtlsdr_set_bias_tee_gpio(rtlsdr_dev_t *dev, int gpio, int on);
-export
-%foreign (librtlsdr "set_bias_tee_gpio")
-set_bias_tee_gpio: Ptr RtlSdrHandle -> Int -> Int -> Int
+getOffsetTuning : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Bool)
+getOffsetTuning h = do
+  r <- fromPrim $ get_offset_tuning h
+  io_pure $ if r < 0 then Left RtlSdrError else Right (if r == 0 then False else True)

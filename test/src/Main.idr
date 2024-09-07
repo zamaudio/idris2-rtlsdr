@@ -10,8 +10,8 @@ testOpenClose = do
   case h of
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
-      putStrLn $ show $ rtlsdr_get_tuner_type h
-      let o = get_offset_tuning h
+      putStrLn $ show $ getTunerType h
+      o <- getOffsetTuning h
       putStrLn $ "Tuner offset: " ++ (show o)
       let g = get_tuner_gain h
       putStrLn $ "Gain: " ++ (show g)

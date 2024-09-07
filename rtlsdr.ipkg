@@ -26,6 +26,7 @@ modules = Bindings.RtlSdr
 	, Bindings.RtlSdr.Misc
 
 	, Bindings.RtlSdr.Raw.Sampling
+	, Bindings.RtlSdr.Raw.Misc
 
 -- opts = "-p effects"
 sourcedir = "src"
