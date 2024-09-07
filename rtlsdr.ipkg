@@ -19,10 +19,13 @@ brief = "package that provides low level bindings to rtlsdr"
 modules = Bindings.RtlSdr
 	, Bindings.RtlSdr.Buffer
 	, Bindings.RtlSdr.Device
+	, Bindings.RtlSdr.Error
 	, Bindings.RtlSdr.Frequency
 	, Bindings.RtlSdr.Gain
 	, Bindings.RtlSdr.Sampling
 	, Bindings.RtlSdr.Misc
+
+	, Bindings.RtlSdr.Raw.Sampling
 
 -- opts = "-p effects"
 sourcedir = "src"

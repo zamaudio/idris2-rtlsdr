@@ -31,7 +31,7 @@ testAM = do
 --      let sr = 100
 
       let _ = set_tuner_gain_mode h 0
-      let _ = set_agc_mode h 0
+      _ <- setAGCMode h True -- ON
 --      let _ = set_sample_rate h sr
       _ <- fromPrim $ set_center_freq h fq
 

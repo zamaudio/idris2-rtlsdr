@@ -1,30 +1,53 @@
 module Bindings.RtlSdr.Sampling
 
 import Bindings.RtlSdr.Device
+import Bindings.RtlSdr.Error
+import Bindings.RtlSdr.Raw.Sampling
 
 %default total
 
--- RTLSDR_API int rtlsdr_set_sample_rate(rtlsdr_dev_t *dev, uint32_t rate);
 export
-%foreign (librtlsdr "set_sample_rate")
-set_sample_rate: Ptr RtlSdrHandle -> Int -> Int
+setSampleRate : Ptr RtlSdrHandle -> Int -> IO Int
+setSampleRate h r = fromPrim $ set_sample_rate h r
 
--- RTLSDR_API uint32_t rtlsdr_get_sample_rate(rtlsdr_dev_t *dev);
 export
-%foreign (librtlsdr "get_sample_rate")
-get_sample_rate: Ptr RtlSdrHandle -> Int
+getSampleRate : Ptr RtlSdrHandle -> IO Int
+getSampleRate h = fromPrim $ get_sample_rate h
 
--- RTLSDR_API int rtlsdr_set_agc_mode(rtlsdr_dev_t *dev, int on);
 export
-%foreign (librtlsdr "set_agc_mode")
-set_agc_mode: Ptr RtlSdrHandle -> Int -> Int
+setAGCMode : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
+setAGCMode h t = do
+  r <- fromPrim $ set_agc_mode h (if t then 1 else 0)
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_set_direct_sampling(rtlsdr_dev_t *dev, int on);
 export
-%foreign (librtlsdr "set_direct_sampling")
-set_direct_sampling: Ptr RtlSdrHandle -> Int -> Int
+data SamplingType = SAMPLING_DISABLED | SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED
 
--- RTLSDR_API int rtlsdr_get_direct_sampling(rtlsdr_dev_t *dev);
 export
-%foreign (librtlsdr "get_direct_sampling")
-get_direct_sampling: Ptr RtlSdrHandle -> Int
+Show SamplingType where
+  show SAMPLING_DISABLED      = "Disabled"
+  show SAMPLING_I_ADC_ENABLED = "I-ADC Input Enabled"
+  show SAMPLING_Q_ADC_ENABLED = "Q-ADC Input Enabled"
+
+toSamplingType : Int -> SamplingType
+toSamplingType 0 = SAMPLING_DISABLED
+toSamplingType 1 = SAMPLING_I_ADC_ENABLED
+toSamplingType 2 = SAMPLING_Q_ADC_ENABLED
+toSamplingType _ = SAMPLING_DISABLED -- FIXME: How to make impossible in Idris2?
+
+fromSamplingType : SamplingType -> Int
+fromSamplingType SAMPLING_DISABLED      = 0
+fromSamplingType SAMPLING_I_ADC_ENABLED = 1
+fromSamplingType SAMPLING_Q_ADC_ENABLED = 2
+
+export
+setDirectSampling : Ptr RtlSdrHandle -> SamplingType -> IO (Either RTLSDR_ERROR ())
+setDirectSampling h t = do
+  r <- fromPrim $ set_direct_sampling h (fromSamplingType t)
+  io_pure $ if r < 0 then Left RtlSdrError else Right ()
+
+export
+getDirectSampling : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR SamplingType)
+getDirectSampling h = do
+  r <- fromPrim $ get_direct_sampling h
+  io_pure $ if r < 0 then Left RtlSdrError else Right (toSamplingType r)
