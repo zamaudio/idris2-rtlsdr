@@ -17,8 +17,9 @@ testOpenClose = do
       putStrLn $ "Gain: " ++ (show g)
       f <- fromPrim $ get_center_freq h
       putStrLn $ "Freq: " ++ (show f)
+
+      _ <- rtlsdr_close h
       putStrLn "Done, closing.."
-      rtlsdr_close h
 
 testAM : IO ()
 testAM = do
@@ -59,8 +60,8 @@ testAM = do
 
       free b
 
+      _ <- rtlsdr_close h
       putStrLn "Done, closing.."
-      rtlsdr_close h
 
 
 testDeviceFound : IO ()
