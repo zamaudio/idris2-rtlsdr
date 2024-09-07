@@ -20,14 +20,14 @@ ReadAsyncFn = String -> Int -> AnyPtr -> PrimIO ()
 -- RTLSDR_API int rtlsdr_wait_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx);
 export
 %foreign (librtlsdr "wait_async")
-wait_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int
+wait_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> PrimIO Int
 
 -- RTLSDR_API int rtlsdr_read_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx, uint32_t buf_num, uint32_t buf_len);
 export
 %foreign (librtlsdr "read_async")
-read_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> Int
+read_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> PrimIO Int
 
 -- RTLSDR_API int rtlsdr_cancel_async(rtlsdr_dev_t *dev);
 export
 %foreign (librtlsdr "cancel_async")
-cancel_async: Ptr RtlSdrHandle -> Int
+cancel_async: Ptr RtlSdrHandle -> PrimIO Int

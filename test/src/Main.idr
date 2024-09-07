@@ -15,7 +15,7 @@ testOpenClose = do
       putStrLn $ "Tuner offset: " ++ (show o)
       let g = get_tuner_gain h
       putStrLn $ "Gain: " ++ (show g)
-      let f = get_center_freq h
+      f <- fromPrim $ get_center_freq h
       putStrLn $ "Freq: " ++ (show f)
       putStrLn "Done, closing.."
       rtlsdr_close h
@@ -33,9 +33,9 @@ testAM = do
       let _ = set_tuner_gain_mode h 0
       let _ = set_agc_mode h 0
 --      let _ = set_sample_rate h sr
-      let _ = set_center_freq h fq
+      _ <- fromPrim $ set_center_freq h fq
 
-      let f = get_center_freq h
+      f <- fromPrim $ get_center_freq h
       putStrLn $ "Freq set to: " ++ (show f)
 
       let fc = get_freq_correction h
