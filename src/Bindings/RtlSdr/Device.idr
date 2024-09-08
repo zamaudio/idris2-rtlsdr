@@ -18,7 +18,7 @@ idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
 
 -- XXX support/ runtime wraps
 %foreign (idris_rtlsdr "open")
-idris_rtlsdr_open : Int -> PrimIO AnyPtr
+idris_rtlsdr_open : Int -> Ptr Int -> PrimIO AnyPtr
 
 -- XXX support/.. int read_refint(int *p);
 export
@@ -28,11 +28,12 @@ idris_rtlsdr_read_refint : Ptr Int -> Int
 export
 rtlsdr_open : Int -> IO (Maybe (Ptr RtlSdrHandle))
 rtlsdr_open idx = do
-  -- let p = prim__getNullAnyPtr -- underlying C library will allocate device handle resource
-  -- res <- fromPrim $ open_prim (prim__castPtr p) idx -- mkForeign (FFun "idris_rtlsdr_open" [FInt] FPtr) idx
-  -- io_pure $ if res == 0 then Just (prim__castPtr p) else Nothing
-  p <- fromPrim $ idris_rtlsdr_open idx
-  io_pure $ Just $ prim__castPtr p
+  v <- prim__castPtr <$> malloc 4 -- ret
+  -- const void * idris_rtlsdr_open(uint32_t index, uint32_t *ret);
+  p <- fromPrim $ idris_rtlsdr_open idx v
+  let ret = idris_rtlsdr_read_refint v
+  free $ prim__forgetPtr v
+  io_pure $ if ret == 0 then Just (prim__castPtr p) else Nothing
 
 
 export
