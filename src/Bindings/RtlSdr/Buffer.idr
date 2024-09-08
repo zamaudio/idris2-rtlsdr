@@ -1,33 +1,36 @@
 module Bindings.RtlSdr.Buffer
 
+import public Bindings.RtlSdr.Raw.Buffer
 import Bindings.RtlSdr.Device
+import Bindings.RtlSdr.Error
+
+import System.FFI
 
 %default total
 
--- RTLSDR_API int rtlsdr_reset_buffer(rtlsdr_dev_t *dev);
 export
-%foreign (librtlsdr "reset_buffer")
-reset_buffer: Ptr RtlSdrHandle -> PrimIO Int
+resetBuffer : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR ())
+resetBuffer h = do
+  r <- fromPrim $ reset_buffer h
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_read_sync(rtlsdr_dev_t *dev, void *buf, int len, int *n_read);
 export
-%foreign (librtlsdr "read_sync")
-read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
+readSync : Ptr RtlSdrHandle -> AnyPtr -> Int -> IO (Either RTLSDR_ERROR Int)
+readSync h b l = do
+  v <- prim__castPtr <$> malloc 4 -- n_read
+  r <- fromPrim $ read_sync h b l v
+  let nr = idris_rtlsdr_read_refint v
+  free $ prim__forgetPtr v
+  io_pure $ if r == 0 then Right nr else Left RtlSdrError
 
--- typedef void(*rtlsdr_read_async_cb_t)(unsigned char *buf, uint32_t len, void *ctx);
-ReadAsyncFn = String -> Int -> AnyPtr -> PrimIO ()
-
--- RTLSDR_API int rtlsdr_wait_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx);
 export
-%foreign (librtlsdr "wait_async")
-wait_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> PrimIO Int
+readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
+readAsync h cb ctx bn bl = do
+  r <- fromPrim $ read_async h cb ctx bn bl
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_read_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx, uint32_t buf_num, uint32_t buf_len);
 export
-%foreign (librtlsdr "read_async")
-read_async: Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> PrimIO Int
-
--- RTLSDR_API int rtlsdr_cancel_async(rtlsdr_dev_t *dev);
-export
-%foreign (librtlsdr "cancel_async")
-cancel_async: Ptr RtlSdrHandle -> PrimIO Int
+cancelAsync : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR ())
+cancelAsync h = do
+  r <- fromPrim $ cancel_async h
+  io_pure $ if r == 0 then Right () else Left RtlSdrError

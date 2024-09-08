@@ -43,18 +43,15 @@ testAM = do
       putStrLn $ "Freq correction set to: " ++ (show fc)
 
       -- flush buffer
-      _ <- fromPrim $ reset_buffer h
+      _ <- resetBuffer h
 
       -- read_sync(device, buffer, buffer_len, &len);
       -- read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
       let bl = 8192 -- buffer length
       b <- malloc bl -- prim__getNullAnyPtr -- buffer
-      l <- prim__castPtr <$> malloc 1 --: Ptr Int -- read length
-      _ <- fromPrim $ read_sync h b bl l
+      l <- readSync h b bl
 
-      let lref = idris_rtlsdr_read_refint l
-      free $ prim__forgetPtr l
-      putStrLn $ "read buffer length = " ++ (show lref)
+      putStrLn $ "read buffer length = " ++ (show l)
 
       -- print out the buffer
 
