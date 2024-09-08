@@ -17,3 +17,8 @@ int idris_rtlsdr_read_ptr_ref(const int *p, size_t off)
 	return p[off];
 }
 
+uint8_t idris_rtlsdr_read_ptr_ref_(const uint8_t *p, size_t off)
+{
+	return p[off];
+}
+

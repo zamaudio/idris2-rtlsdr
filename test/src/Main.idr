@@ -2,9 +2,11 @@ module Main
 
 import Bindings.RtlSdr
 import Data.Bits
+import Data.Buffer
 import Data.List
 import System.FFI
 import System.File
+import System.File.Buffer
 
 abs : (i, q : Bits8) -> (Bits8, Bits8)
 abs i q =
@@ -38,23 +40,32 @@ unIQ (i :: q :: rest) =
   let (hi, lo) = abs i q
     in lo :: hi :: unIQ rest
 
-demodAM : String -> String
-demodAM s = do
-  let v : List Int = map ord (unpack s)
-  let demod : List Int = reverse $ map cast $ unIQ (map cast v)
-  pack $ map chr demod
+demodAM : List Bits8 -> List Bits8
+demodAM = unIQ
 
-writeBufToFile : String -> Int -> IO ()
-writeBufToFile b l = do
-  r <- appendFile "data.wav" b
-  case r of
-       Left  e => printLn e
-       Right _ => putStrLn $ "written buffer length = " ++ (show l)
+writeBufToFile : List Bits8 -> IO ()
+writeBufToFile bytes = do
+  let len : Int = cast (length bytes)
+  Just buf <- newBuffer len
+    | Nothing => putStrLn "could not allocate buffer"
 
-readAsyncCallback : ReadAsyncFnPrim
-readAsyncCallback buf len ctx = toPrim $ do
-  let de = demodAM buf
-  writeBufToFile de (cast $ length de) -- len
+  for_ (zip [0 .. len-1] bytes) $ \(i, byte) =>
+    setBits8 buf i byte
+
+  result <- withFile "data.wav" Append printLn $ \f => do
+    Right () <- writeBufferData f buf 0 len
+      | Left (err, len) => do
+          printLn ("could not writeBufferData", err, len)
+          pure $ Left ()
+
+    pure $ Right ()
+
+  case result of
+    Left err => printLn err
+    Right () => pure ()
+
+readAsyncCallback : ReadAsyncFn
+readAsyncCallback ctx buf = writeBufToFile (demodAM buf)
 
 testAM : IO ()
 testAM = do

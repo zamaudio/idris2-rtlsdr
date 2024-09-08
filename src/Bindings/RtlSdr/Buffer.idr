@@ -24,10 +24,16 @@ readSync h b l = do
   free $ prim__forgetPtr v
   io_pure $ if r == 0 then Right nr else Left RtlSdrError
 
+public export
+ReadAsyncFn : Type
+ReadAsyncFn = AnyPtr -> List Bits8 -> IO ()
+
 export
-readAsync : Ptr RtlSdrHandle -> ReadAsyncFnPrim -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
-readAsync h cb ctx bn bl = do
-  r <- fromPrim $ read_async h cb ctx bn bl
+readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
+readAsync h cbIO ctx bn bl = do
+  let cbPrim = \bufPtr, bufLen, ctxPtr => toPrim $
+        cbIO ctxPtr =<< readBufPtr' bufPtr bufLen
+  r <- fromPrim $ read_async h cbPrim ctx bn bl
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
 export
