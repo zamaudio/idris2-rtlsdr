@@ -13,7 +13,7 @@ testOpenClose = do
       putStrLn $ show $ getTunerType h
       o <- getOffsetTuning h
       putStrLn $ "Tuner offset: " ++ (show o)
-      let g = get_tuner_gain h
+      g <- getTunerGain h
       putStrLn $ "Gain: " ++ (show g)
       f <- getCenterFreq h
       putStrLn $ "Freq: " ++ (show f)
@@ -31,7 +31,7 @@ testAM = do
       let fq = 133250000 -- YBTH AWIS
 --      let sr = 100
 
-      let _ = set_tuner_gain_mode h 0
+      _ <- setTunerGainMode h False
       _ <- setAGCMode h True -- ON
 --      let _ = set_sample_rate h sr
       _ <- setCenterFreq h fq

@@ -1,35 +1,48 @@
 module Bindings.RtlSdr.Gain
 
 import Bindings.RtlSdr.Device
+import Bindings.RtlSdr.Error
+import Bindings.RtlSdr.Raw.Gain
+
+import System.FFI
 
 %default total
 
--- RTLSDR_API int rtlsdr_get_tuner_gains(rtlsdr_dev_t *dev, int *gains);
 export
-%foreign (librtlsdr "get_tuner_gains")
-get_tuner_gains: Ptr RtlSdrHandle -> Ptr Int -> Int
+getTunerGains : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Int)
+getTunerGains h = do
+  v <- prim__castPtr <$> malloc 4 -- gains
+  r <- fromPrim $ get_tuner_gains h v
+  let g = idris_rtlsdr_read_refint v
+  free $ prim__forgetPtr v
+  io_pure $ if r == 0 then Right g else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_set_tuner_gain(rtlsdr_dev_t *dev, int gain);
 export
-%foreign (librtlsdr "set_tuner_gain")
-set_tuner_gain: Ptr RtlSdrHandle -> Int -> Int
+setTunerGain : Ptr RtlSdrHandle -> Int -> IO (Either RTLSDR_ERROR ())
+setTunerGain h g = do
+  r <- fromPrim $ set_tuner_gain h g
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_set_tuner_bandwidth(rtlsdr_dev_t *dev, uint32_t bw);
 export
-%foreign (librtlsdr "set_tuner_bandwidth")
-set_tuner_bandwidth: Ptr RtlSdrHandle -> Int -> Int
+setTunerBandwidth : Ptr RtlSdrHandle -> Int -> IO (Either RTLSDR_ERROR ())
+setTunerBandwidth h bw = do
+  r <- fromPrim $ set_tuner_bandwidth h bw
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_get_tuner_gain(rtlsdr_dev_t *dev);
 export
-%foreign (librtlsdr "get_tuner_gain")
-get_tuner_gain: Ptr RtlSdrHandle -> Int
+getTunerGain : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Int)
+getTunerGain h = do
+  r <- fromPrim $ get_tuner_gain h
+  io_pure $ if r == 0 then Left RtlSdrError else Right r
 
--- RTLSDR_API int rtlsdr_set_tuner_if_gain(rtlsdr_dev_t *dev, int stage, int gain);
 export
-%foreign (librtlsdr "set_tuner_if_gain")
-set_tuner_if_gain: Ptr RtlSdrHandle -> Int -> Int
+setTunerIFGain : Ptr RtlSdrHandle -> Int -> Int -> IO (Either RTLSDR_ERROR ())
+setTunerIFGain h s g = do
+  r <- fromPrim $ set_tuner_if_gain h s g
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
 
--- RTLSDR_API int rtlsdr_set_tuner_gain_mode(rtlsdr_dev_t *dev, int manual);
 export
-%foreign (librtlsdr "set_tuner_gain_mode")
-set_tuner_gain_mode: Ptr RtlSdrHandle -> Int -> Int
+setTunerGainMode : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
+setTunerGainMode h t = do
+  r <- fromPrim $ set_tuner_gain_mode h (if t then 1 else 0)
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
