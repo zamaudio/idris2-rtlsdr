@@ -1,7 +1,10 @@
 module Main
 
 import Bindings.RtlSdr
+import Data.Bits
+import Data.List
 import System.FFI
+import System.File
 
 testOpenClose : IO ()
 testOpenClose = do
@@ -21,6 +24,56 @@ testOpenClose = do
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
 
+abs : (i, q : Bits8) -> (Bits8, Bits8)
+abs i q =
+  let
+    ii : Double -- Bits32
+    ii = cast i * cast i
+
+    qq : Double -- Bits32
+    qq = cast q * cast q
+
+    iiqq' : Double -- Bits32
+    iiqq' = sqrt ( ii + qq )
+
+    -- clamp to 16bit word size.
+    iiqq : Bits16
+    iiqq = if iiqq' > 32768 then 32768 else (cast iiqq')
+
+    -- encode U8 wav
+    iiqqLo : Bits8
+    iiqqLo = cast iiqq
+
+    iiqqHi : Bits8
+    iiqqHi = cast (iiqq `shiftR` 8)
+  in
+    (iiqqHi, iiqqLo)
+
+unIQ : List Bits8 -> List Bits8
+unIQ [] = []
+unIQ [_] = []
+unIQ (i :: q :: rest) =
+  let (hi, lo) = abs i q
+    in lo :: hi :: unIQ rest
+
+demodAM : String -> String
+demodAM s = do
+  let v : List Int = map ord (unpack s)
+  let demod : List Int = reverse $ map cast $ unIQ (map cast v)
+  pack $ map chr demod
+
+writeBufToFile : String -> Int -> IO ()
+writeBufToFile b l = do
+  r <- appendFile "data.wav" b
+  case r of
+       Left  e => printLn e
+       Right _ => putStrLn $ "written buffer length = " ++ (show l)
+
+readasync_cb : String -> Int -> AnyPtr -> PrimIO ()
+readasync_cb buf len ctx = toPrim $ do
+  let de = demodAM buf
+  writeBufToFile de (cast $ length de) -- len
+
 testAM : IO ()
 testAM = do
   putStrLn "opening RTL SDR idx 0"
@@ -28,13 +81,15 @@ testAM = do
   case h of
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
-      let fq = 133250000 -- YBTH AWIS
---      let sr = 100
+      let fq = 476_425_000 -- UHF chan1 -- 133_250_000 -- YBTH AWIS
 
       _ <- setTunerGainMode h False
       _ <- setAGCMode h True -- ON
---      let _ = set_sample_rate h sr
       _ <- setCenterFreq h fq
+      _ <- setTunerBandwidth h 0 -- auto
+      _ <- setTunerGain h 182
+      -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
+      _ <- setSampleRate h 250_000
 
       f <- getCenterFreq h
       putStrLn $ "Freq set to: " ++ (show f)
@@ -42,20 +97,19 @@ testAM = do
       fc <- getFreqCorrection h
       putStrLn $ "Freq correction set to: " ++ (show fc)
 
+      g <- getTunerGain h
+      putStrLn $ "Gain: " ++ (show g)
+      f <- getCenterFreq h
+      putStrLn $ "Freq: " ++ (show f)
+      s <- getDirectSampling h
+      putStrLn $ "Sampling mode: " ++ (show s)
+      r <- getSampleRate h
+      putStrLn $ "Sample rate: " ++ (show r)
+
       -- flush buffer
       _ <- resetBuffer h
 
-      -- read_sync(device, buffer, buffer_len, &len);
-      -- read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
-      let bl = 8192 -- buffer length
-      b <- malloc bl -- prim__getNullAnyPtr -- buffer
-      l <- readSync h b bl
-
-      putStrLn $ "read buffer length = " ++ (show l)
-
-      -- print out the buffer
-
-      free b
+      _ <- readAsync h readasync_cb prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
