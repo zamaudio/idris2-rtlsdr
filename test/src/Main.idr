@@ -6,24 +6,6 @@ import Data.List
 import System.FFI
 import System.File
 
-testOpenClose : IO ()
-testOpenClose = do
-  putStrLn "opening RTL SDR idx 0"
-  h <- rtlsdr_open 0
-  case h of
-    Nothing => putStrLn "Failed to open device handle"
-    Just h => do
-      putStrLn $ show $ getTunerType h
-      o <- getOffsetTuning h
-      putStrLn $ "Tuner offset: " ++ (show o)
-      g <- getTunerGain h
-      putStrLn $ "Gain: " ++ (show g)
-      f <- getCenterFreq h
-      putStrLn $ "Freq: " ++ (show f)
-
-      _ <- rtlsdr_close h
-      putStrLn "Done, closing.."
-
 abs : (i, q : Bits8) -> (Bits8, Bits8)
 abs i q =
   let
@@ -101,6 +83,8 @@ testAM = do
       putStrLn $ "Gain: " ++ (show g)
       f <- getCenterFreq h
       putStrLn $ "Freq: " ++ (show f)
+      o <- getOffsetTuning h
+      putStrLn $ "Tuner offset: " ++ (show o)
       s <- getDirectSampling h
       putStrLn $ "Sampling mode: " ++ (show s)
       r <- getSampleRate h
@@ -124,5 +108,4 @@ testDeviceFound = do
 main : IO ()
 main = do
   testDeviceFound
-  testOpenClose
   testAM
