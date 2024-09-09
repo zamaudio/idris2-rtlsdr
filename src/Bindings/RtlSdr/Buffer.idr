@@ -24,7 +24,7 @@ readSync h b l = do
   io_pure $ if r == 0 then Right nr else Left RtlSdrError
 
 export
-readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
+readAsync : Ptr RtlSdrHandle -> ReadAsyncFnPrim -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
 readAsync h cb ctx bn bl = do
   r <- fromPrim $ read_async h cb ctx bn bl
   io_pure $ if r == 0 then Right () else Left RtlSdrError

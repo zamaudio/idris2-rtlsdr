@@ -51,8 +51,8 @@ writeBufToFile b l = do
        Left  e => printLn e
        Right _ => putStrLn $ "written buffer length = " ++ (show l)
 
-readasync_cb : String -> Int -> AnyPtr -> PrimIO ()
-readasync_cb buf len ctx = toPrim $ do
+readAsyncCallback : ReadAsyncFnPrim
+readAsyncCallback buf len ctx = toPrim $ do
   let de = demodAM buf
   writeBufToFile de (cast $ length de) -- len
 
@@ -93,7 +93,7 @@ testAM = do
       -- flush buffer
       _ <- resetBuffer h
 
-      _ <- readAsync h readasync_cb prim__getNullAnyPtr 0 0
+      _ <- readAsync h readAsyncCallback prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
