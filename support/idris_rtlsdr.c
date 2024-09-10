@@ -12,7 +12,7 @@ const void * idris_rtlsdr_open(uint32_t index, uint32_t *ret)
 	return dev;
 }
 
-int idris_rtlsdr_read_ptr_ref(const char *p, size_t off)
+int idris_rtlsdr_read_ptr_ref(const int *p, size_t off)
 {
 	return p[off];
 }
