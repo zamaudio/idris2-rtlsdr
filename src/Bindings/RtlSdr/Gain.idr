@@ -12,12 +12,12 @@ import System.FFI
 export
 getTunerGains : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR (List Int))
 getTunerGains h = do
-  v <- prim__castPtr <$> malloc 100 -- gains
-  n <- fromPrim $ get_tuner_gains h v
+  n <- fromPrim $ get_tuner_gains h (prim__castPtr prim__getNullAnyPtr)
   if n < 0 then do
-             free $ prim__forgetPtr v
              io_pure $ Left RtlSdrError
            else do
+             v <- prim__castPtr <$> malloc n
+             _ <- fromPrim $ get_tuner_gains h v
              g <- readBufPtr v n
              free $ prim__forgetPtr v
              io_pure $ Right g
