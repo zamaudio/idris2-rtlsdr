@@ -3,6 +3,7 @@ module Bindings.RtlSdr.Buffer
 import public Bindings.RtlSdr.Raw.Buffer
 import Bindings.RtlSdr.Device
 import Bindings.RtlSdr.Error
+import Bindings.RtlSdr.Raw.Support
 
 import System.FFI
 

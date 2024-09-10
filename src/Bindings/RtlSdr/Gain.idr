@@ -3,6 +3,7 @@ module Bindings.RtlSdr.Gain
 import Bindings.RtlSdr.Device
 import Bindings.RtlSdr.Error
 import Bindings.RtlSdr.Raw.Gain
+import Bindings.RtlSdr.Raw.Support
 
 import System.FFI
 

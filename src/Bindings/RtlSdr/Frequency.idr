@@ -3,6 +3,7 @@ module Bindings.RtlSdr.Frequency
 import Bindings.RtlSdr.Device
 import Bindings.RtlSdr.Error
 import Bindings.RtlSdr.Raw.Frequency
+import Bindings.RtlSdr.Raw.Support
 
 import System.FFI
 
