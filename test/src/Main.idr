@@ -79,6 +79,8 @@ testAM = do
       fc <- getFreqCorrection h
       putStrLn $ "Freq correction set to: " ++ (show fc)
 
+      gs <- getTunerGains h
+      putStrLn $ "Gains: " ++ (show gs)
       g <- getTunerGain h
       putStrLn $ "Gain: " ++ (show g)
       f <- getCenterFreq h

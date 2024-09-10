@@ -25,6 +25,11 @@ export
 %foreign (idris_rtlsdr "read_refint")
 idris_rtlsdr_read_refint : Ptr Int -> Int
 
+-- XXX support/.. int read_ptr_ref(int *p, int off);
+export
+%foreign (idris_rtlsdr "read_ptr_ref")
+idris_rtlsdr_read_ptr_ref : Ptr Int -> Int -> Int
+
 export
 rtlsdr_open : Int -> IO (Maybe (Ptr RtlSdrHandle))
 rtlsdr_open idx = do

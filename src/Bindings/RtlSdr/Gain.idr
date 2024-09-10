@@ -8,14 +8,22 @@ import System.FFI
 
 %default total
 
+private
+readGains : Ptr Int -> Int -> IO (List Int)
+readGains g n = for [0..n-1] $ \k => io_pure $ idris_rtlsdr_read_ptr_ref g k
+
 export
-getTunerGains : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Int)
+getTunerGains : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR (List Int))
 getTunerGains h = do
-  v <- prim__castPtr <$> malloc 4 -- gains
-  r <- fromPrim $ get_tuner_gains h v
-  let g = idris_rtlsdr_read_refint v
-  free $ prim__forgetPtr v
-  io_pure $ if r == 0 then Right g else Left RtlSdrError
+  v <- prim__castPtr <$> malloc 100 -- gains
+  n <- fromPrim $ get_tuner_gains h v
+  if n < 0 then do
+             free $ prim__forgetPtr v
+             io_pure $ Left RtlSdrError
+           else do
+             g <- readGains v n
+             free $ prim__forgetPtr v
+             io_pure $ Right g
 
 export
 setTunerGain : Ptr RtlSdrHandle -> Int -> IO (Either RTLSDR_ERROR ())
