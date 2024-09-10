@@ -20,11 +20,6 @@ idris_rtlsdr fn = "C:" ++ "idris_rtlsdr_" ++ fn ++ ",rtlsdr-idris"
 %foreign (idris_rtlsdr "open")
 idris_rtlsdr_open : Int -> Ptr Int -> PrimIO AnyPtr
 
--- XXX support/.. int read_refint(int *p);
-export
-%foreign (idris_rtlsdr "read_refint")
-idris_rtlsdr_read_refint : Ptr Int -> Int
-
 -- XXX support/.. int read_ptr_ref(int *p, int off);
 export
 %foreign (idris_rtlsdr "read_ptr_ref")
@@ -36,7 +31,7 @@ rtlsdr_open idx = do
   v <- prim__castPtr <$> malloc 4 -- ret
   -- const void * idris_rtlsdr_open(uint32_t index, uint32_t *ret);
   p <- fromPrim $ idris_rtlsdr_open idx v
-  let ret = idris_rtlsdr_read_refint v
+  let ret = idris_rtlsdr_read_ptr_ref v 0
   free $ prim__forgetPtr v
   io_pure $ if ret == 0 then Just (prim__castPtr p) else Nothing
 

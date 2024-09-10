@@ -19,7 +19,7 @@ readSync : Ptr RtlSdrHandle -> AnyPtr -> Int -> IO (Either RTLSDR_ERROR Int)
 readSync h b l = do
   v <- prim__castPtr <$> malloc 4 -- n_read
   r <- fromPrim $ read_sync h b l v
-  let nr = idris_rtlsdr_read_refint v
+  let nr = idris_rtlsdr_read_ptr_ref v 0
   free $ prim__forgetPtr v
   io_pure $ if r == 0 then Right nr else Left RtlSdrError
 
