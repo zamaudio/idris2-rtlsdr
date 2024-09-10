@@ -17,3 +17,7 @@ idris_rtlsdr_open : Int -> Ptr Int -> PrimIO AnyPtr
 export
 %foreign (idris_rtlsdr "read_ptr_ref")
 idris_rtlsdr_read_ptr_ref : Ptr Int -> Int -> Int
+
+export
+readBufPtr : Ptr Int -> Int -> IO (List Int)
+readBufPtr p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref p i

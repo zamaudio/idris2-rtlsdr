@@ -9,10 +9,6 @@ import System.FFI
 
 %default total
 
-private
-readGains : Ptr Int -> Int -> IO (List Int)
-readGains g n = for [0..n-1] $ \k => io_pure $ idris_rtlsdr_read_ptr_ref g k
-
 export
 getTunerGains : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR (List Int))
 getTunerGains h = do
@@ -22,7 +18,7 @@ getTunerGains h = do
              free $ prim__forgetPtr v
              io_pure $ Left RtlSdrError
            else do
-             g <- readGains v n
+             g <- readBufPtr v n
              free $ prim__forgetPtr v
              io_pure $ Right g
 
