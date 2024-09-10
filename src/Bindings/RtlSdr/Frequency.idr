@@ -21,7 +21,7 @@ getXTALFreq h = do
   rtl_freq   <- prim__castPtr <$> malloc 4 -- rtl_freq frequency value used to clock the RTL2832 in Hz
   tuner_freq <- prim__castPtr <$> malloc 4 -- tuner_freq frequency value used to clock the tuner IC in Hz
   r <- fromPrim $ get_xtal_freq h rtl_freq tuner_freq
-  let v = (idris_rtlsdr_read_ptr_ref rtl_freq 0, idris_rtlsdr_read_ptr_ref tuner_freq 0)
+  let v = (peekInt rtl_freq, peekInt tuner_freq)
   free $ prim__forgetPtr rtl_freq
   free $ prim__forgetPtr tuner_freq
   io_pure $ if r == 0 then Right v else Left RtlSdrError

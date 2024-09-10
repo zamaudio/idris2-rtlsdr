@@ -18,7 +18,7 @@ rtlsdr_open idx = do
   v <- prim__castPtr <$> malloc 4 -- ret
   -- const void * idris_rtlsdr_open(uint32_t index, uint32_t *ret);
   p <- fromPrim $ idris_rtlsdr_open idx v
-  let ret = idris_rtlsdr_read_ptr_ref v 0
+  let ret = peekInt v
   free $ prim__forgetPtr v
   io_pure $ if ret == 0 then Just (prim__castPtr p) else Nothing
 
