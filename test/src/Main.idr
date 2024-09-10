@@ -65,11 +65,12 @@ testAM = do
     Just h => do
       let fq = 476_425_000 -- UHF chan1 -- 133_250_000 -- YBTH AWIS
 
-      _ <- setTunerGainMode h False
+      _ <- setTunerGainMode h True -- manual gain
+      _ <- setTunerGain h 192 -- 19.2dB
+
       _ <- setAGCMode h True -- ON
       _ <- setCenterFreq h fq
       _ <- setTunerBandwidth h 0 -- auto
-      _ <- setTunerGain h 182
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
       _ <- setSampleRate h 250_000
 
