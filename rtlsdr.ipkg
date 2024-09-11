@@ -27,6 +27,7 @@ modules = Bindings.RtlSdr
 
 	, Bindings.RtlSdr.Raw.Buffer
 	, Bindings.RtlSdr.Raw.Device
+	, Bindings.RtlSdr.Raw.EEProm
 	, Bindings.RtlSdr.Raw.Frequency
 	, Bindings.RtlSdr.Raw.Gain
 	, Bindings.RtlSdr.Raw.Sampling
