@@ -33,15 +33,12 @@ abs i q =
   in
     (iiqqHi, iiqqLo)
 
-unIQ : List Bits8 -> List Bits8
-unIQ [] = []
-unIQ [_] = []
-unIQ (i :: q :: rest) =
-  let (hi, lo) = abs i q
-    in lo :: hi :: unIQ rest
-
 demodAM : List Bits8 -> List Bits8
-demodAM = unIQ
+demodAM [] = []
+demodAM [_] = []
+demodAM (i :: q :: rest) =
+  let (hi, lo) = abs i q
+    in hi :: lo :: demodAM rest
 
 writeBufToFile : List Bits8 -> IO ()
 writeBufToFile bytes = do
