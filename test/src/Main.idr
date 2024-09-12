@@ -8,7 +8,7 @@ import System.FFI
 import System.File
 import System.File.Buffer
 
-abs : (i, q : Bits8) -> (Bits8, Bits8)
+abs : (i, q : Bits8) -> Bits16
 abs i q =
   let
     ii : Double -- Bits32
@@ -16,38 +16,24 @@ abs i q =
 
     qq : Double -- Bits32
     qq = cast q * cast q
-
-    iiqq' : Double -- Bits32
-    iiqq' = sqrt ( ii + qq )
-
-    -- clamp to 16bit word size.
-    iiqq : Bits16
-    iiqq = if iiqq' > 32768 then 32768 else (cast iiqq')
-
-    -- encode U8 wav
-    iiqqLo : Bits8
-    iiqqLo = cast iiqq
-
-    iiqqHi : Bits8
-    iiqqHi = cast (iiqq `shiftR` 8)
   in
-    (iiqqHi, iiqqLo)
+    cast $ sqrt ( ii + qq )
 
-demodAM : List Bits8 -> List Bits8
+demodAM : List Bits8 -> List Bits16
 demodAM [] = []
 demodAM [_] = []
 demodAM (i :: q :: rest) =
-  let (hi, lo) = abs i q
-    in hi :: lo :: demodAM rest
+  let w = abs i q
+    in w :: demodAM rest
 
-writeBufToFile : List Bits8 -> IO ()
+writeBufToFile : List Bits16 -> IO ()
 writeBufToFile bytes = do
   let len : Int = cast (length bytes)
   Just buf <- newBuffer len
     | Nothing => putStrLn "could not allocate buffer"
 
-  for_ (zip [0 .. len-1] bytes) $ \(i, byte) =>
-    setBits8 buf i byte
+  for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
+    setBits16 buf i w
 
   result <- withFile "data.wav" Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len
