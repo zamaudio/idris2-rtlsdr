@@ -57,9 +57,10 @@ testAM = do
   case h of
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
-      let fq = 476_425_000 -- UHF chan1 -- 133_250_000 -- YBTH AWIS
+      --let fq = 133_250_000 -- YBTH AWIS
+      let fq = 127_350_000 -- YBTH CTAF
 
-      _ <- setTunerGainMode h True -- manual gain
+      _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h 192 -- 19.2dB
 
       _ <- setAGCMode h True -- ON
@@ -67,6 +68,7 @@ testAM = do
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
       _ <- setSampleRate h 250_000
+      _ <- setFreqCorrection h (-15)
 
       f <- getCenterFreq h
       putStrLn $ "Freq set to: " ++ (show f)
