@@ -15,7 +15,7 @@ export
 read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
 
 -- typedef void(*rtlsdr_read_async_cb_t)(unsigned char *buf, uint32_t len, void *ctx);
-ReadAsyncFnPrim = Ptr Bits8 -> Int -> AnyPtr -> PrimIO ()
+ReadAsyncFnPrim = Ptr Int8 -> Int -> AnyPtr -> PrimIO ()
 
 -- RTLSDR_API int rtlsdr_read_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx, uint32_t buf_num, uint32_t buf_len);
 export

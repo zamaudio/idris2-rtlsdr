@@ -8,32 +8,32 @@ import System.FFI
 import System.File
 import System.File.Buffer
 
-abs : (i, q : Bits8) -> Bits16
+abs : (i, q : Int8) -> Int16
 abs i q =
   let
-    ii : Double -- Bits32
+    ii : Double
     ii = cast i * cast i
 
-    qq : Double -- Bits32
+    qq : Double
     qq = cast q * cast q
   in
     cast $ sqrt ( ii + qq )
 
-demodAM : List Bits8 -> List Bits16
+demodAM : List Int8 -> List Int16
 demodAM [] = []
 demodAM [_] = []
 demodAM (i :: q :: rest) =
   let w = abs i q
     in w :: demodAM rest
 
-writeBufToFile : List Bits16 -> IO ()
+writeBufToFile : List Int16 -> IO ()
 writeBufToFile bytes = do
   let len : Int = cast (length bytes)
   Just buf <- newBuffer len
     | Nothing => putStrLn "could not allocate buffer"
 
   for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
-    setBits16 buf i w
+    setBits16 buf i (cast w)
 
   result <- withFile "data.wav" Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len

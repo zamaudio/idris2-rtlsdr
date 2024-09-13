@@ -26,7 +26,7 @@ readSync h b l = do
 
 public export
 ReadAsyncFn : Type
-ReadAsyncFn = AnyPtr -> List Bits8 -> IO ()
+ReadAsyncFn = AnyPtr -> List Int8 -> IO ()
 
 export
 readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
