@@ -26,8 +26,14 @@ demodAM (i :: q :: rest) =
   let w = abs i q
     in w :: demodAM rest
 
+average : List Int16 -> Int16
+average xs = cast {to = Int16} $
+  foldr ((+) . cast {to = Int}) 0 xs `div` cast (length xs)
+
 downSample : Int -> List Int16 -> List Int16
-downSample _ l = l
+downSample chunkLen [] = []
+downSample chunkLen xs with (splitAt (cast chunkLen) xs)
+  _ | (chunk, rest) = average chunk :: downSample chunkLen rest
 
 writeBufToFile : List Int16 -> IO ()
 writeBufToFile bytes = do
@@ -51,7 +57,7 @@ writeBufToFile bytes = do
     Right () => pure ()
 
 readAsyncCallback : ReadAsyncFn
-readAsyncCallback ctx buf = writeBufToFile (downSample 0 $ demodAM buf)
+readAsyncCallback ctx buf = writeBufToFile (downSample 10 $ demodAM buf)
 
 testAM : IO ()
 testAM = do
