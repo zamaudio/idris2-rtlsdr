@@ -26,6 +26,9 @@ demodAM (i :: q :: rest) =
   let w = abs i q
     in w :: demodAM rest
 
+downSample : Int -> List Int16 -> List Int16
+downSample _ l = l
+
 writeBufToFile : List Int16 -> IO ()
 writeBufToFile bytes = do
   let len : Int = cast (length bytes)
@@ -48,7 +51,7 @@ writeBufToFile bytes = do
     Right () => pure ()
 
 readAsyncCallback : ReadAsyncFn
-readAsyncCallback ctx buf = writeBufToFile (demodAM buf)
+readAsyncCallback ctx buf = writeBufToFile (downSample 0 $ demodAM buf)
 
 testAM : IO ()
 testAM = do
