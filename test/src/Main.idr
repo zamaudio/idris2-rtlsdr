@@ -4,6 +4,8 @@ import Bindings.RtlSdr
 import Data.Bits
 import Data.Buffer
 import Data.List
+import Data.String
+import System
 import System.FFI
 import System.File
 import System.File.Buffer
@@ -35,8 +37,8 @@ downSample chunkLen [] = []
 downSample chunkLen xs with (splitAt (cast chunkLen) xs)
   _ | (chunk, rest) = average chunk :: downSample chunkLen rest
 
-writeBufToFile : List Int16 -> IO ()
-writeBufToFile bytes = do
+writeBufToFile : String -> List Int16 -> IO ()
+writeBufToFile fpath bytes = do
   let len : Int = cast (length bytes)
   Just buf <- newBuffer (2*len)
     | Nothing => putStrLn "could not allocate buffer"
@@ -44,7 +46,7 @@ writeBufToFile bytes = do
   for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
     setBits16 buf (2*i) (cast w)
 
-  result <- withFile "data.wav" Append printLn $ \f => do
+  result <- withFile fpath Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len
       | Left (err, len) => do
           printLn ("could not writeBufferData", err, len)
@@ -56,18 +58,20 @@ writeBufToFile bytes = do
     Left err => printLn err
     Right () => pure ()
 
-readAsyncCallback : ReadAsyncFn
-readAsyncCallback ctx buf = writeBufToFile (downSample 10 $ demodAM buf)
+readAsyncCallback : String -> ReadAsyncFn
+readAsyncCallback fpath ctx buf = writeBufToFile fpath (downSample 10 $ demodAM buf)
 
-testAM : IO ()
-testAM = do
+testAM : Maybe String -> Maybe String -> IO ()
+testAM freq' fpath' = do
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
     Nothing => putStrLn "Failed to open device handle"
     Just h => do
-      --let fq = 133_250_000 -- YBTH AWIS
-      let fq = 127_350_000 -- YBTH CTAF
+      --let fq_default = 133_250_000 -- YBTH AWIS
+      let fq_default = 127_350_000 -- YBTH CTAF
+      let freq = fromMaybe (show fq_default) freq'
+      let fq = fromMaybe fq_default $ parsePositive freq
 
       _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h 192 -- 19.2dB
@@ -101,7 +105,9 @@ testAM = do
       -- flush buffer
       _ <- resetBuffer h
 
-      _ <- readAsync h readAsyncCallback prim__getNullAnyPtr 0 0
+      let fpath = fromMaybe "/dev/stdout" fpath'
+      putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
+      _ <- readAsync h (readAsyncCallback fpath) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
@@ -113,7 +119,21 @@ testDeviceFound = do
   putStrLn $ "Device Count: " ++ show n
   for_ [0..n-1] $ \k => putStrLn $ "Device Name: " ++ get_device_name k
 
+record Args where
+  constructor MkArgs
+  fPath : Maybe String
+  freq  : Maybe String
+
+parseArgs : List String -> Args -> Args
+parseArgs [] = id
+parseArgs ("--file" :: f :: rest) = parseArgs rest . {fPath := Just f}
+parseArgs ("--freq" :: f :: rest) = parseArgs rest . {freq  := Just f}
+parseArgs (_ :: rest) = parseArgs rest -- FIXME handle errors
+
+
 main : IO ()
 main = do
+  args' <- getArgs
+  let args = parseArgs args' (MkArgs Nothing Nothing)
   testDeviceFound
-  testAM
+  testAM args.freq args.fPath
