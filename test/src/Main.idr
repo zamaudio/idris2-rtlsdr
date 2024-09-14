@@ -43,11 +43,11 @@ thresholdFilter t xs = map (\v => if v > (cast t) then v else 0) xs
 writeBufToFile : String -> List Int16 -> IO ()
 writeBufToFile fpath bytes = do
   let len : Int = cast (length bytes)
-  Just buf <- newBuffer (2*len)
+  Just buf <- newBuffer len
     | Nothing => putStrLn "could not allocate buffer"
 
   for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
-    setBits16 buf (2*i) (cast w)
+    setBits16 buf i (cast w)
 
   result <- withFile fpath Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len
