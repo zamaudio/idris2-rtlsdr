@@ -32,11 +32,11 @@ downSample _ l = l
 writeBufToFile : List Int16 -> IO ()
 writeBufToFile bytes = do
   let len : Int = cast (length bytes)
-  Just buf <- newBuffer len
+  Just buf <- newBuffer (2*len)
     | Nothing => putStrLn "could not allocate buffer"
 
   for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
-    setBits16 buf i (cast w)
+    setBits16 buf (2*i) (cast w)
 
   result <- withFile "data.wav" Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len
