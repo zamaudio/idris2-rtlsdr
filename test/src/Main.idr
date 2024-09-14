@@ -37,6 +37,9 @@ downSample chunkLen [] = []
 downSample chunkLen xs with (splitAt (cast chunkLen) xs)
   _ | (chunk, rest) = average chunk :: downSample chunkLen rest
 
+thresholdFilter : Int -> List Int16 -> List Int16
+thresholdFilter t xs = map (\v => if v > (cast t) then v else 0) xs
+
 writeBufToFile : String -> List Int16 -> IO ()
 writeBufToFile fpath bytes = do
   let len : Int = cast (length bytes)
@@ -58,11 +61,11 @@ writeBufToFile fpath bytes = do
     Left err => printLn err
     Right () => pure ()
 
-readAsyncCallback : String -> ReadAsyncFn
-readAsyncCallback fpath ctx buf = writeBufToFile fpath (downSample 10 $ demodAM buf)
+readAsyncCallback : String -> Int -> ReadAsyncFn
+readAsyncCallback fpath thres ctx buf = writeBufToFile fpath (thresholdFilter thres ( downSample 100 $ demodAM buf ))
 
-testAM : Maybe Int -> Maybe String -> IO ()
-testAM freq fpath' = do
+testAM : Maybe Int -> Maybe Int -> Maybe String -> IO ()
+testAM freq thres' fpath' = do
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
@@ -106,7 +109,9 @@ testAM freq fpath' = do
 
       let fpath = fromMaybe "/dev/stdout" fpath'
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
-      _ <- readAsync h (readAsyncCallback fpath) prim__getNullAnyPtr 0 0
+
+      let thres = fromMaybe 15 thres' -- default threshold of >15
+      _ <- readAsync h (readAsyncCallback fpath thres) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
@@ -122,6 +127,7 @@ record Args where
   constructor MkArgs
   fPath : Maybe String
   freq  : Maybe Int
+  thres : Maybe Int
 
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
@@ -130,6 +136,10 @@ parseArgs ("--freq" :: f :: rest) =
   case parsePositive f of
     Nothing => \args => Left $ "--freq: could not parse: " ++ f
     Just f' => parseArgs rest . {freq  := Just f'}
+parseArgs ("--threshold" :: t :: rest) =
+  case parsePositive t of
+    Nothing => \args => Left $ "--threshold: could not parse: " ++ t
+    Just t' => parseArgs rest . {thres  := Just t'}
 parseArgs (arg :: rest) =
   \args => Left $ "unknown argument: " ++ arg
 
@@ -137,8 +147,8 @@ main : IO ()
 main = do
   exeName :: args' <- getArgs
     | [] => putStrLn "impossible: empty args"
-  case parseArgs args' (MkArgs Nothing Nothing) of
+  case parseArgs args' (MkArgs Nothing Nothing Nothing) of
     Left err => putStrLn err
     Right args => do
       testDeviceFound
-      testAM args.freq args.fPath
+      testAM args.freq args.thres args.fPath
