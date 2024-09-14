@@ -61,8 +61,8 @@ writeBufToFile fpath bytes = do
 readAsyncCallback : String -> ReadAsyncFn
 readAsyncCallback fpath ctx buf = writeBufToFile fpath (downSample 10 $ demodAM buf)
 
-testAM : Maybe String -> Maybe String -> IO ()
-testAM freq' fpath' = do
+testAM : Maybe Int -> Maybe String -> IO ()
+testAM freq fpath' = do
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
@@ -70,8 +70,7 @@ testAM freq' fpath' = do
     Just h => do
       --let fq_default = 133_250_000 -- YBTH AWIS
       let fq_default = 127_350_000 -- YBTH CTAF
-      let freq = fromMaybe (show fq_default) freq'
-      let fq = fromMaybe fq_default $ parsePositive freq
+      let fq = fromMaybe fq_default freq
 
       _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h 192 -- 19.2dB
@@ -122,18 +121,24 @@ testDeviceFound = do
 record Args where
   constructor MkArgs
   fPath : Maybe String
-  freq  : Maybe String
+  freq  : Maybe Int
 
-parseArgs : List String -> Args -> Args
-parseArgs [] = id
+parseArgs : List String -> Args -> Either String Args
+parseArgs [] = Right
 parseArgs ("--file" :: f :: rest) = parseArgs rest . {fPath := Just f}
-parseArgs ("--freq" :: f :: rest) = parseArgs rest . {freq  := Just f}
-parseArgs (_ :: rest) = parseArgs rest -- FIXME handle errors
-
+parseArgs ("--freq" :: f :: rest) =
+  case parsePositive f of
+    Nothing => \args => Left $ "--freq: could not parse: " ++ f
+    Just f' => parseArgs rest . {freq  := Just f'}
+parseArgs (arg :: rest) =
+  \args => Left $ "unknown argument: " ++ arg
 
 main : IO ()
 main = do
-  args' <- getArgs
-  let args = parseArgs args' (MkArgs Nothing Nothing)
-  testDeviceFound
-  testAM args.freq args.fPath
+  exeName :: args' <- getArgs
+    | [] => putStrLn "impossible: empty args"
+  case parseArgs args' (MkArgs Nothing Nothing) of
+    Left err => putStrLn err
+    Right args => do
+      testDeviceFound
+      testAM args.freq args.fPath
