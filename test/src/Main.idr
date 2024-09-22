@@ -10,35 +10,8 @@ import System.FFI
 import System.File
 import System.File.Buffer
 
-abs : (i, q : Int8) -> Int16
-abs i q =
-  let
-    ii : Double
-    ii = cast i * cast i
+import AM
 
-    qq : Double
-    qq = cast q * cast q
-  in
-    cast $ sqrt ( ii + qq )
-
-demodAM : List Int8 -> List Int16
-demodAM [] = []
-demodAM [_] = []
-demodAM (i :: q :: rest) =
-  let w = abs i q
-    in w :: demodAM rest
-
-average : List Int16 -> Int16
-average xs = cast {to = Int16} $
-  foldr ((+) . cast {to = Int}) 0 xs `div` cast (length xs)
-
-downSample : Int -> List Int16 -> List Int16
-downSample chunkLen [] = []
-downSample chunkLen xs with (splitAt (cast chunkLen) xs)
-  _ | (chunk, rest) = average chunk :: downSample chunkLen rest
-
-thresholdFilter : Int -> List Int16 -> List Int16
-thresholdFilter t xs = map (\v => if v > (cast t) then v else 0) xs
 
 writeBufToFile : String -> List Int16 -> IO ()
 writeBufToFile fpath bytes = do
@@ -62,7 +35,7 @@ writeBufToFile fpath bytes = do
     Right () => pure ()
 
 readAsyncCallback : String -> Int -> ReadAsyncFn
-readAsyncCallback fpath thres ctx buf = writeBufToFile fpath (thresholdFilter thres ( downSample 100 $ demodAM buf ))
+readAsyncCallback fpath thres ctx buf = writeBufToFile fpath (demodAMStream buf 100 thres)
 
 testAM : Maybe Int -> Maybe Int -> Maybe String -> IO ()
 testAM freq thres' fpath' = do
