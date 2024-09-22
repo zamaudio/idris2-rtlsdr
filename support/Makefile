@@ -18,9 +18,6 @@ else
  LDFLAGS += -fuse-ld=gold
 endif
 
-# Hack in ldpath for test to run in CI.
-CFLAGS += -rpath=`pwd`
-
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
