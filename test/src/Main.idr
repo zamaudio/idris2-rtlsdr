@@ -123,6 +123,25 @@ testDeviceFound = do
   putStrLn $ "Device Count: " ++ show n
   for_ [0..n-1] $ \k => putStrLn $ "Device Name: " ++ get_device_name k
 
+testDumpEEProm : IO ()
+testDumpEEProm = do
+  putStrLn "opening RTL SDR idx 0"
+  h <- rtlsdr_open 0
+  case h of
+    Nothing => putStrLn "Failed to open device handle"
+    Just h => do
+      let len = 256
+      r <- readEEProm h 0 len
+      case r of
+           Right b => do
+             putStrLn "Dumping EEProm content to eeprom.bin"
+             _ <- writeBufferToFile "eeprom.bin" b len
+             io_pure ()
+           Left e => putStrLn $ "could not read EEProm" ++ show e
+      _ <- rtlsdr_close h
+      putStrLn "Done, closing.."
+  io_pure ()
+
 record Args where
   constructor MkArgs
   fPath : Maybe String
@@ -151,4 +170,5 @@ main = do
     Left err => putStrLn err
     Right args => do
       testDeviceFound
+      testDumpEEProm
       testAM args.freq args.thres args.fPath
