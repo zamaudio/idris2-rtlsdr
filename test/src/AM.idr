@@ -3,8 +3,8 @@ module AM
 import Data.Buffer
 import Data.List
 
-abs : (i, q : Int16) -> Int16
-abs i q =
+mag : (i, q : Int16) -> Int16
+mag i q =
   let
     ii : Double
     ii = cast i * cast i
@@ -18,7 +18,7 @@ demodAM : List Int16 -> List Int16
 demodAM [] = []
 demodAM [_] = []
 demodAM (i :: q :: rest) =
-  let w = abs i q
+  let w = mag i q
     in w :: demodAM rest
 
 average : List Int16 -> Int16
