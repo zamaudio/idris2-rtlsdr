@@ -97,7 +97,7 @@ testAM args = do
       -- flush buffer
       _ <- resetBuffer h
 
-      let fpath = fromMaybe "/dev/stdout" args.fpath
+      let fpath = fromMaybe "/dev/stderr" args.fpath
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
 
       let thres = fromMaybe 15 args.thres -- default threshold of >15
