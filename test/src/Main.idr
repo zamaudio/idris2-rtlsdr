@@ -3,6 +3,7 @@ module Main
 import Bindings.RtlSdr
 import Data.Bits
 import Data.Buffer
+import Data.Either
 import Data.List
 import Data.String
 import System
@@ -84,13 +85,13 @@ testAM args = do
       gs <- getTunerGains h
       putStrLn $ "Gains: " ++ (show gs)
       g <- getTunerGain h
-      putStrLn $ "Gain: " ++ (show g)
+      putStrLn $ "Gain: " ++ (fromMaybe "<unknown>" $ map show $ getRight g)
       f <- getCenterFreq h
-      putStrLn $ "Freq: " ++ (show f)
+      putStrLn $ "Freq: " ++ (fromMaybe "<unknown>" $ map show $ getRight f)
       o <- getOffsetTuning h
-      putStrLn $ "Tuner offset: " ++ (show o)
+      putStrLn $ "Tuner offset: " ++ (fromMaybe "<unknown>" $ map show $ getRight o)
       s <- getDirectSampling h
-      putStrLn $ "Sampling mode: " ++ (show s)
+      putStrLn $ "Sampling mode: " ++ (fromMaybe "<unknown>" $ map show $ getRight s)
       r <- getSampleRate h
       putStrLn $ "Sample rate: " ++ (show r)
 
