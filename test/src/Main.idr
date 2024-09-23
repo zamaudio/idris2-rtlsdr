@@ -34,8 +34,8 @@ writeBufToFile fpath bytes = do
     Left err => printLn err
     Right () => pure ()
 
-readAsyncCallback : String -> Int -> ReadAsyncFn
-readAsyncCallback fpath thres ctx buf = writeBufToFile fpath (demodAMStream buf 100 thres)
+readAsyncCallback : String -> Int -> Int -> Int -> ReadAsyncFn
+readAsyncCallback fpath thres drate scale ctx buf = writeBufToFile fpath (demodAMStream buf drate scale thres)
 
 testAM : Maybe Int -> Maybe Int -> Maybe String -> IO ()
 testAM freq thres' fpath' = do
@@ -48,6 +48,15 @@ testAM freq thres' fpath' = do
       let fq_default = 127_350_000 -- YBTH CTAF
       let fq = fromMaybe fq_default freq
 
+      let rate_in = 24_000
+      putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
+      let rate_iq = 1_008_000
+      putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
+      let rate_downsample = (1_000_000 `div` rate_in) + 1
+      putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
+      let output_scale = (1 `shiftL` 15) `div` (128 * rate_downsample)
+      putStrLn $ " debug> output scaled by: " ++ show output_scale
+
       _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h 192 -- 19.2dB
 
@@ -55,7 +64,7 @@ testAM freq thres' fpath' = do
       _ <- setCenterFreq h fq
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
-      _ <- setSampleRate h 250_000
+      _ <- setSampleRate h rate_iq
       _ <- setFreqCorrection h (-15)
 
       f <- getCenterFreq h
@@ -84,7 +93,7 @@ testAM freq thres' fpath' = do
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
 
       let thres = fromMaybe 15 thres' -- default threshold of >15
-      _ <- readAsync h (readAsyncCallback fpath thres) prim__getNullAnyPtr 0 0
+      _ <- readAsync h (readAsyncCallback fpath thres rate_downsample output_scale) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."

@@ -3,8 +3,8 @@ module AM
 import Data.Buffer
 import Data.List
 
-mag : (i, q : Int16) -> Int16
-mag i q =
+mag : Int -> (i, q : Int16) -> Int16
+mag s i q =
   let
     ii : Double
     ii = cast i * cast i
@@ -12,14 +12,14 @@ mag i q =
     qq : Double
     qq = cast q * cast q
   in
-    cast $ sqrt ( ii + qq )
+    cast $ sqrt ( ii + qq ) * (cast s)
 
-demodAM : List Int16 -> List Int16
-demodAM [] = []
-demodAM [_] = []
-demodAM (i :: q :: rest) =
-  let w = mag i q
-    in w :: demodAM rest
+demodAM : Int -> List Int16 -> List Int16
+demodAM _ [] = []
+demodAM s [_] = []
+demodAM s (i :: q :: rest) =
+  let w = mag s i q
+    in w :: demodAM s rest
 
 average : List Int16 -> Int16
 average xs = cast {to = Int16} $
@@ -37,5 +37,5 @@ scaleStream : List Int8 -> List Int16
 scaleStream l = map (\i => cast {to = Int16} i - 127) l
 
 export
-demodAMStream : List Int8 -> Int -> Int -> List Int16
-demodAMStream s ds thres = thresholdFilter thres ( downSample ds $ demodAM $ scaleStream s )
+demodAMStream : List Int8 -> Int -> Int -> Int -> List Int16
+demodAMStream s ds scale thres = thresholdFilter thres ( downSample ds $ demodAM scale $ scaleStream s )
