@@ -16,7 +16,7 @@ getTunerGains h = do
   if n < 0 then do
              io_pure $ Left RtlSdrError
            else do
-             v <- prim__castPtr <$> malloc n
+             v <- prim__castPtr <$> malloc (n*8)
              _ <- fromPrim $ get_tuner_gains h v
              g <- readBufPtr v n
              free $ prim__forgetPtr v
