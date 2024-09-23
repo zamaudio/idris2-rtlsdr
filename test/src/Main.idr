@@ -37,8 +37,8 @@ writeBufToFile fpath bytes = do
 readAsyncCallback : String -> Int -> Int -> Int -> ReadAsyncFn
 readAsyncCallback fpath thres drate scale ctx buf = writeBufToFile fpath (demodAMStream buf drate scale thres)
 
-testAM : Maybe Int -> Maybe Int -> Maybe String -> IO ()
-testAM freq thres' fpath' = do
+testAM : Maybe Int -> Maybe Int -> Maybe Int -> Maybe String -> IO ()
+testAM freq thres' ppm' fpath' = do
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
@@ -65,7 +65,8 @@ testAM freq thres' fpath' = do
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
       _ <- setSampleRate h rate_iq
-      _ <- setFreqCorrection h (-15)
+      let ppm = fromMaybe (-15) ppm' -- default ppm of -15
+      _ <- setFreqCorrection h ppm
 
       f <- getCenterFreq h
       putStrLn $ "Freq set to: " ++ (show f)
@@ -110,6 +111,7 @@ record Args where
   fPath : Maybe String
   freq  : Maybe Int
   thres : Maybe Int
+  ppm   : Maybe Int
 
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
@@ -122,6 +124,10 @@ parseArgs ("--threshold" :: t :: rest) =
   case parsePositive t of
     Nothing => \args => Left $ "--threshold: could not parse: " ++ t
     Just t' => parseArgs rest . {thres  := Just t'}
+parseArgs ("--ppm" :: p :: rest) =
+  case parsePositive p of
+    Nothing => \args => Left $ "--ppm: could not parse: " ++ p
+    Just p' => parseArgs rest . {ppm := Just p'}
 parseArgs (arg :: rest) =
   \args => Left $ "unknown argument: " ++ arg
 
@@ -129,9 +135,9 @@ main : IO ()
 main = do
   exeName :: args' <- getArgs
     | [] => putStrLn "impossible: empty args"
-  case parseArgs args' (MkArgs Nothing Nothing Nothing) of
+  case parseArgs args' (MkArgs Nothing Nothing Nothing Nothing) of
     Left err => putStrLn err
     Right args => do
       testDeviceFound
       testDumpEEProm
-      testAM args.freq args.thres args.fPath
+      testAM args.freq args.thres args.ppm args.fPath
