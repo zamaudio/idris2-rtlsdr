@@ -37,8 +37,15 @@ writeBufToFile fpath bytes = do
 readAsyncCallback : String -> Int -> Int -> Int -> ReadAsyncFn
 readAsyncCallback fpath thres drate scale ctx buf = writeBufToFile fpath (demodAMStream buf drate scale thres)
 
-testAM : Maybe Int -> Maybe Int -> Maybe Int -> Maybe String -> IO ()
-testAM freq thres' ppm' fpath' = do
+record Args where
+  constructor MkArgs
+  fpath : Maybe String
+  freq  : Maybe Int
+  thres : Maybe Int
+  ppm   : Maybe Int
+
+testAM : Args -> IO ()
+testAM args = do
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
@@ -46,7 +53,7 @@ testAM freq thres' ppm' fpath' = do
     Just h => do
       --let fq_default = 133_250_000 -- YBTH AWIS
       let fq_default = 127_350_000 -- YBTH CTAF
-      let fq = fromMaybe fq_default freq
+      let fq = fromMaybe fq_default args.freq
 
       let rate_in = 24_000
       putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
@@ -65,7 +72,7 @@ testAM freq thres' ppm' fpath' = do
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
       _ <- setSampleRate h rate_iq
-      let ppm = fromMaybe (-15) ppm' -- default ppm of -15
+      let ppm = fromMaybe (-15) args.ppm -- default ppm of -15
       _ <- setFreqCorrection h ppm
 
       f <- getCenterFreq h
@@ -90,10 +97,10 @@ testAM freq thres' ppm' fpath' = do
       -- flush buffer
       _ <- resetBuffer h
 
-      let fpath = fromMaybe "/dev/stdout" fpath'
+      let fpath = fromMaybe "/dev/stdout" args.fpath
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
 
-      let thres = fromMaybe 15 thres' -- default threshold of >15
+      let thres = fromMaybe 15 args.thres -- default threshold of >15
       _ <- readAsync h (readAsyncCallback fpath thres rate_downsample output_scale) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
@@ -106,16 +113,9 @@ testDeviceFound = do
   putStrLn $ "Device Count: " ++ show n
   for_ [0..n-1] $ \k => putStrLn $ "Device Name: " ++ get_device_name k
 
-record Args where
-  constructor MkArgs
-  fPath : Maybe String
-  freq  : Maybe Int
-  thres : Maybe Int
-  ppm   : Maybe Int
-
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
-parseArgs ("--file" :: f :: rest) = parseArgs rest . {fPath := Just f}
+parseArgs ("--file" :: f :: rest) = parseArgs rest . {fpath := Just f}
 parseArgs ("--freq" :: f :: rest) =
   case parsePositive f of
     Nothing => \args => Left $ "--freq: could not parse: " ++ f
@@ -131,13 +131,16 @@ parseArgs ("--ppm" :: p :: rest) =
 parseArgs (arg :: rest) =
   \args => Left $ "unknown argument: " ++ arg
 
+defaultArgs : Args
+defaultArgs = MkArgs Nothing Nothing Nothing Nothing
+
 main : IO ()
 main = do
   exeName :: args' <- getArgs
     | [] => putStrLn "impossible: empty args"
-  case parseArgs args' (MkArgs Nothing Nothing Nothing Nothing) of
+  case parseArgs args' defaultArgs of
     Left err => putStrLn err
     Right args => do
       testDeviceFound
       testDumpEEProm
-      testAM args.freq args.thres args.ppm args.fPath
+      testAM args
