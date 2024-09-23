@@ -33,9 +33,9 @@ downSample chunkLen xs with (splitAt (cast chunkLen) xs)
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs = map (\v => if v > (cast t) then v else 0) xs
 
-scaleStream : List Int8 -> List Int16
+scaleStream : List Bits8 -> List Int16
 scaleStream l = map (\i => cast {to = Int16} i - 127) l
 
 export
-demodAMStream : List Int8 -> Int -> Int -> Int -> List Int16
+demodAMStream : List Bits8 -> Int -> Int -> Int -> List Int16
 demodAMStream s ds scale thres = thresholdFilter thres ( downSample ds $ demodAM scale $ scaleStream s )

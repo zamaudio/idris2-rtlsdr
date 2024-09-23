@@ -22,10 +22,10 @@ readBufPtr : Ptr Int -> Int -> IO (List Int)
 readBufPtr p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref p i
 
 %foreign (idris_rtlsdr "read_ptr_ref_")
-idris_rtlsdr_read_ptr_ref' : Ptr Int8 -> Int -> Int8
+idris_rtlsdr_read_ptr_ref' : Ptr Bits8 -> Int -> Bits8
 
 export
-readBufPtr' : Ptr Int8 -> Int -> IO (List Int8)
+readBufPtr' : Ptr Bits8 -> Int -> IO (List Bits8)
 readBufPtr' p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref' p i
 
 export
