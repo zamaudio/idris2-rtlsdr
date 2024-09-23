@@ -19,6 +19,11 @@ decodeRetError e = case e of
                         -3 => RtlSdrEEPromNotFound
                         _ =>  RtlSdrError -- unknonwn
 
+||| Read EEPROM connected to RTL device
+|||
+||| @h is the device handle
+||| @o is the offset address where the data should be read from
+||| @l is the length of the data to read
 export
 readEEProm : Ptr RtlSdrHandle -> Int -> Int -> IO (Either RTLSDR_ERROR Buffer)
 readEEProm h o l = do

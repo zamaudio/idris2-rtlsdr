@@ -27,16 +27,27 @@ toTunerType 5 = RTLSDR_TUNER_R820T
 toTunerType 6 = RTLSDR_TUNER_R828D
 toTunerType _ = RTLSDR_TUNER_UNKNOWN
 
+||| Get the tuner type.
+|||
+||| @h is the device handle
 export
 getTunerType : Ptr RtlSdrHandle -> TunerType
 getTunerType h = toTunerType $ get_tuner_type h
 
+||| Enable or disable offset tuning for zero-IF tuners, which allows to avoid
+||| problems caused by the DC offset of the ADCs and 1/f noise.
+|||
+||| @h is the device handle
+||| @t toggles where False means disabled and True means enabled
 export
 setOffsetTuning : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
 setOffsetTuning h t = do
   r <- fromPrim $ set_offset_tuning h (if t == False then 0 else 1)
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
+||| Get state of the offset tuning mode
+|||
+||| @h is the device handle
 export
 getOffsetTuning : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Bool)
 getOffsetTuning h = do

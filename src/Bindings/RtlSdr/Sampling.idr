@@ -6,14 +6,29 @@ import Bindings.RtlSdr.Raw.Sampling
 
 %default total
 
+||| Set the sample rate for the device, also selects the baseband filters
+||| according to the requested sample rate for tuners where this is possible.
+|||
+||| @h is the device handle
+||| @r is the sample rate to be set, possible values are:
+||| 		    225001 - 300000 Hz
+||| 		    900001 - 3200000 Hz
+||| 		    sample loss is to be expected for rates > 2400000
 export
 setSampleRate : Ptr RtlSdrHandle -> Int -> IO Int
 setSampleRate h r = fromPrim $ set_sample_rate h r
 
+||| Get actual sample rate the device is configured to.
+|||
+||| @h is the device handle
 export
 getSampleRate : Ptr RtlSdrHandle -> IO Int
 getSampleRate h = fromPrim $ get_sample_rate h
 
+||| Enable or disable the internal digital AGC of the RTL2832.
+|||
+||| @h is the device handle
+||| @t is the toggle of digital AGC mode, True means enabled, False means disabled
 export
 setAGCMode : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
 setAGCMode h t = do
@@ -40,12 +55,22 @@ fromSamplingType SAMPLING_DISABLED      = 0
 fromSamplingType SAMPLING_I_ADC_ENABLED = 1
 fromSamplingType SAMPLING_Q_ADC_ENABLED = 2
 
+||| Enable or disable the direct sampling mode. When enabled, the IF mode
+||| of the RTL2832 is activated, and `setCenterFreq` will control
+||| the IF-frequency of the DDC, which can be used to tune from 0 to 28.8 MHz
+||| (xtal frequency of the RTL2832).
+|||
+||| @h is the device handle
+||| @t is the mode of `SampleType`
 export
 setDirectSampling : Ptr RtlSdrHandle -> SamplingType -> IO (Either RTLSDR_ERROR ())
 setDirectSampling h t = do
   r <- fromPrim $ set_direct_sampling h (fromSamplingType t)
   io_pure $ if r < 0 then Left RtlSdrError else Right ()
 
+||| Get state of the direct sampling mode
+|||
+||| @h is the device handle
 export
 getDirectSampling : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR (Maybe SamplingType))
 getDirectSampling h = do
