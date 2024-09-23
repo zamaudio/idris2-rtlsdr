@@ -34,8 +34,8 @@ writeBufToFile fpath bytes = do
     Left err => printLn err
     Right () => pure ()
 
-readAsyncCallback : String -> Int -> Int -> Int -> ReadAsyncFn
-readAsyncCallback fpath thres drate scale ctx buf = writeBufToFile fpath (demodAMStream buf drate scale thres)
+readAsyncCallback : String -> Int -> Int -> ReadAsyncFn
+readAsyncCallback fpath thres drate ctx buf = writeBufToFile fpath (demodAMStream buf drate thres)
 
 record Args where
   constructor MkArgs
@@ -101,7 +101,7 @@ testAM args = do
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
 
       let thres = fromMaybe 15 args.thres -- default threshold of >15
-      _ <- readAsync h (readAsyncCallback fpath thres rate_downsample output_scale) prim__getNullAnyPtr 0 0
+      _ <- readAsync h (readAsyncCallback fpath thres rate_downsample) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."

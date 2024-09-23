@@ -1,27 +1,31 @@
 module AM
 
 import Data.Buffer
+import Data.Bits
 import Data.List
 
 -- Calculate the magnitude of the IQ vector and scale it,
--- scale is defined as S16_MAX_SZ/(128*downsample_rate).
-mag : Int -> (i, q : Int16) -> Int16
-mag s i q =
+-- scale is defined as S16_MAX_SZ/128.
+mag : (i, q : Int16) -> Int16
+mag i q =
   let
     ii : Double
     ii = cast i * cast i
 
     qq : Double
     qq = cast q * cast q
-  in
-    cast $ sqrt ( ii + qq ) * (cast s)
 
-demodAM : Int -> List Int16 -> List Int16
-demodAM _ [] = []
-demodAM _ [_] = []
-demodAM s (i :: q :: rest) =
-  let w = mag s i q
-    in w :: demodAM s rest
+    s : Double
+    s = cast $ (1 `shiftL` 15) `div` 128
+  in
+    cast $ sqrt ( ii + qq ) * s
+
+demodAM : List Int16 -> List Int16
+demodAM [] = []
+demodAM [_] = []
+demodAM (i :: q :: rest) =
+  let w = mag i q
+    in w :: demodAM rest
 
 average : List Int16 -> Int16
 average xs = cast {to = Int16} $
@@ -40,11 +44,11 @@ scaleStream : List Bits8 -> List Int16
 scaleStream l = map (\i => cast {to = Int16} i - 127) l
 
 export
-demodAMStream : List Bits8 -> Int -> Int -> Int -> List Int16
-demodAMStream l dsr s t =
+demodAMStream : List Bits8 -> Int -> Int -> List Int16
+demodAMStream l dsr t =
   let
     demod   : List Int16
-    demod   = demodAM s $ scaleStream l
+    demod   = demodAM $ scaleStream l
     dsample : List Int16
     dsample = downSample dsr demod
   in
