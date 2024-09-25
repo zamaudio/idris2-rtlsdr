@@ -62,8 +62,6 @@ testAM args = do
       putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
       let rate_downsample = (500_000 `div` rate_in) + 1
       putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
-      let output_scale = (1 `shiftL` 15) `div` (128 * rate_downsample)
-      putStrLn $ " debug> output scaled by: " ++ show output_scale
 
       _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h 192 -- 19.2dB
