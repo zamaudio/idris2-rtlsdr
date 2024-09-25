@@ -64,14 +64,14 @@ testAM args = do
       putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
 
       _ <- setTunerGainMode h False -- manual gain
-      _ <- setTunerGain h 192 -- 19.2dB
+      _ <- setTunerGain h (-100) -- auto
 
       _ <- setAGCMode h True -- ON
       _ <- setCenterFreq h fq
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
       _ <- setSampleRate h rate_iq
-      let ppm = fromMaybe (-15) args.ppm -- default ppm of -15
+      let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
       _ <- setFreqCorrection h ppm
 
       f <- getCenterFreq h
