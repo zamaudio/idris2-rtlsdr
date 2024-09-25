@@ -16,7 +16,7 @@ mag i q =
     qq = cast q * cast q
 
     s : Double
-    s = cast $ (1 `shiftL` 15) `div` 128
+    s = 256.0 -- which equals cast $ (1 `shiftL` 15) `div` 128
   in
     cast $ sqrt ( ii + qq ) * s
 
@@ -41,7 +41,7 @@ thresholdFilter t xs = map (\v => if abs(v) > (cast t) then v else 0) xs
 
 -- Turn [U8] into [S16] re-centred around zero.
 scaleStream : List Bits8 -> List Int16
-scaleStream l = map (\i => cast {to = Int16} i - 127) l
+scaleStream l = map (\i => (cast {to = Int16} i) - 128) l
 
 export
 demodAMStream : List Bits8 -> Int -> Int -> List Int16
