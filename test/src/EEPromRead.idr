@@ -16,8 +16,9 @@ getString16 b o l = do
   io_pure $ pack ca
 
 export
-testDumpEEProm : IO ()
-testDumpEEProm = do
+testDumpEEProm : Maybe String -> IO ()
+testDumpEEProm dpath' = do
+  let dpath = fromMaybe "eeprom.bin" dpath'
   putStrLn "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
@@ -34,7 +35,7 @@ testDumpEEProm = do
                vendor <- getString16 b 0x0B slen
                putStrLn $ "EEPRom contains vendor: '" ++ vendor ++ "'."
 
-             _ <- writeBufferToFile "eeprom.bin" b len
+             _ <- writeBufferToFile dpath b len
              io_pure ()
            Left e => putStrLn $ "could not read EEProm" ++ show e
       _ <- rtlsdr_close h

@@ -40,6 +40,7 @@ readAsyncCallback fpath thres drate ctx buf = writeBufToFile fpath (demodAMStrea
 
 record Args where
   constructor MkArgs
+  dpath : Maybe String
   fpath : Maybe String
   freq  : Maybe Int
   thres : Maybe Int
@@ -114,6 +115,7 @@ testDeviceFound = do
 
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
+parseArgs ("--dump" :: f :: rest) = parseArgs rest . {dpath := Just f}
 parseArgs ("--file" :: f :: rest) = parseArgs rest . {fpath := Just f}
 parseArgs ("--freq" :: f :: rest) =
   case parsePositive f of
@@ -131,7 +133,7 @@ parseArgs (arg :: rest) =
   \args => Left $ "unknown argument: " ++ arg
 
 defaultArgs : Args
-defaultArgs = MkArgs Nothing Nothing Nothing Nothing
+defaultArgs = MkArgs Nothing Nothing Nothing Nothing Nothing
 
 main : IO ()
 main = do
@@ -141,5 +143,5 @@ main = do
     Left err => putStrLn err
     Right args => do
       testDeviceFound
-      testDumpEEProm
+      testDumpEEProm args.dpath
       testAM args
