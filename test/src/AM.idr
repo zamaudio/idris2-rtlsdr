@@ -31,10 +31,10 @@ average : List Int16 -> Int16
 average xs = cast {to = Int16} $
   foldr ((+) . cast {to = Int}) 0 xs `div` cast (length xs)
 
-downSample : Int -> List Int16 -> List Int16
-downSample chunkLen [] = []
-downSample chunkLen xs with (splitAt (cast chunkLen) xs)
-  _ | (chunk, rest) = average chunk :: downSample chunkLen rest
+downSample : Int -> (List Int16 -> Int16) -> List Int16 -> List Int16
+downSample chunkLen _ [] = []
+downSample chunkLen f xs with (splitAt (cast chunkLen) xs)
+  _ | (chunk, rest) = f chunk :: downSample chunkLen f rest
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs = map (\v => if abs(v) > (cast t) then v else 0) xs
@@ -50,6 +50,6 @@ demodAMStream l dsr t =
     demod   : List Int16
     demod   = demodAM $ scaleStream l
     dsample : List Int16
-    dsample = downSample dsr demod
+    dsample = downSample dsr average demod
   in
     thresholdFilter t dsample
