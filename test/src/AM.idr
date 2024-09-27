@@ -29,14 +29,28 @@ demodAM (iq :: rest) =
   let w = mag iq
     in w :: demodAM rest
 
-average : List Int16 -> Int16
-average xs = cast {to = Int16} $
-  foldr ((+) . cast {to = Int}) 0 xs `div` cast (length xs)
+averagedList : List IQ -> IQ
+averagedList xs =
+  let
+    len : Int16
+    len = cast $ length xs
 
-downSample : Int -> (List Int16 -> Int16) -> List Int16 -> List Int16
+    divIQ : IQ -> Int16 -> IQ
+    divIQ (MkIQ i q) d = MkIQ (i `div` d) (q `div` d)
+
+    sumIQs : List IQ -> IQ
+    sumIQs xs = foldr (+) (fromInteger 0) xs
+
+  in
+    divIQ (sumIQs xs) len
+
+downSample : Int -> (List IQ -> IQ) -> List IQ -> List IQ
 downSample chunkLen _ [] = []
 downSample chunkLen f xs with (splitAt (cast chunkLen) xs)
-  _ | (chunk, rest) = f chunk :: downSample chunkLen f rest
+  _ | (chunk, rest) = (f chunk) :: (downSample chunkLen f rest)
+
+firFilter : Int -> List IQ -> List IQ
+firFilter w xs = downSample w averagedList xs
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs = map (\v => if abs(v) > (cast t) then v else 0) xs
@@ -45,9 +59,9 @@ export
 demodAMStream : List IQ -> Int -> Int -> List Int16
 demodAMStream l dsr t =
   let
+    dsample : List IQ
+    dsample = firFilter dsr l
     demod   : List Int16
-    demod   = demodAM l
-    dsample : List Int16
-    dsample = downSample dsr average demod
+    demod   = demodAM dsample
   in
-    thresholdFilter t dsample
+    thresholdFilter t demod
