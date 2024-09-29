@@ -9,13 +9,13 @@ import Bindings.RtlSdr
 -- Calculate the magnitude of the IQ vector and scale it,
 -- scale is defined as S16_MAX_SZ/128.
 mag : IQ -> Int16
-mag iq =
+mag (MkIQ i q) =
   let
     ii : Double
-    ii = cast (iVal iq) * cast (iVal iq)
+    ii = cast i * cast i
 
     qq : Double
-    qq = cast (qVal iq) * cast (qVal iq)
+    qq = cast q * cast q
 
     s : Double
     s = 256.0 -- which equals cast $ (1 `shiftL` 15) `div` 128
