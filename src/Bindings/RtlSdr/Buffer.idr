@@ -15,6 +15,21 @@ resetBuffer h = do
   r <- fromPrim $ reset_buffer h
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
+public export
+record IQ where
+  constructor MkIQ
+  iVal : Int16
+  qVal : Int16
+
+-- Turn [U8] into [S16] re-centred around zero.
+scaleIQ : Bits8 -> Int16
+scaleIQ v = (cast {to = Int16} v) - 128
+
+toIQ : List Bits8 -> List IQ
+toIQ [] = []
+toIQ [_] = []
+toIQ (xs::ys::rest) = (MkIQ (scaleIQ xs) (scaleIQ ys)) :: toIQ rest
+
 ||| Read samples from the device synchronously.
 |||
 ||| @h is the device handle
@@ -32,8 +47,7 @@ readSync h b l = do
 ||| Call callback closure type signature
 public export
 ReadAsyncFn : Type
-ReadAsyncFn = AnyPtr -> List Bits8 -> IO ()
-
+ReadAsyncFn = AnyPtr -> List IQ -> IO ()
 
 ||| Read samples from the device asynchronously. This will block until
 ||| it is being canceled using `cancelAsync`.
@@ -50,7 +64,7 @@ export
 readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
 readAsync h cbIO ctx bn bl = do
   let cbPrim = \bufPtr, bufLen, ctxPtr => toPrim $
-        cbIO ctxPtr =<< readBufPtr' bufPtr bufLen
+        cbIO ctxPtr =<< ((io_pure . toIQ) =<< readBufPtr' bufPtr bufLen)
   r <- fromPrim $ read_async h cbPrim ctx bn bl
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
