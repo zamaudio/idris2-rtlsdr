@@ -26,6 +26,12 @@ Eq IQ where
   a == b = (iVal a, qVal a) == (iVal b, qVal b)
   a /= b = not (a == b)
 
+export
+Num IQ where
+  MkIQ a b + MkIQ a' b' = MkIQ (a+a') (b+b')
+  MkIQ a b * MkIQ a' b' = MkIQ (a*a' + b*b') (a*b' + b*a')
+  fromInteger x = MkIQ (cast x) 0
+
 -- Turn [U8] into [S16] re-centred around zero.
 scaleIQ : Bits8 -> Int16
 scaleIQ v = (cast {to = Int16} v) - 128
