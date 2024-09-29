@@ -21,14 +21,22 @@ record IQ where
   iVal : Int16
   qVal : Int16
 
+export
+Eq IQ where
+  a == b = (iVal a, qVal a) == (iVal b, qVal b)
+  a /= b = not (a == b)
+
 -- Turn [U8] into [S16] re-centred around zero.
 scaleIQ : Bits8 -> Int16
 scaleIQ v = (cast {to = Int16} v) - 128
 
-toIQ : List Bits8 -> List IQ
-toIQ [] = []
-toIQ [_] = []
-toIQ (xs::ys::rest) = (MkIQ (scaleIQ xs) (scaleIQ ys)) :: toIQ rest
+toIQ : Bits8 -> Bits8 -> IQ
+toIQ i q = MkIQ (scaleIQ q) (scaleIQ q)
+
+toIQList : List Bits8 -> List IQ
+toIQList [] = []
+toIQList [_] = []
+toIQList (xs::ys::rest) = (toIQ xs ys) :: toIQList rest
 
 ||| Read samples from the device synchronously.
 |||
@@ -64,7 +72,7 @@ export
 readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
 readAsync h cbIO ctx bn bl = do
   let cbPrim = \bufPtr, bufLen, ctxPtr => toPrim $
-        cbIO ctxPtr =<< ((io_pure . toIQ) =<< readBufPtr' bufPtr bufLen)
+        cbIO ctxPtr =<< ((io_pure . toIQList) =<< readBufPtr' bufPtr bufLen)
   r <- fromPrim $ read_async h cbPrim ctx bn bl
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
