@@ -31,7 +31,7 @@ scaleIQ : Bits8 -> Int16
 scaleIQ v = (cast {to = Int16} v) - 128
 
 toIQ : Bits8 -> Bits8 -> IQ
-toIQ i q = MkIQ (scaleIQ q) (scaleIQ q)
+toIQ i q = MkIQ (scaleIQ i) (scaleIQ q)
 
 toIQList : List Bits8 -> List IQ
 toIQList [] = []
