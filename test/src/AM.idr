@@ -40,13 +40,15 @@ averagedList xs =
   in
     divIQ (sumIQs xs) len
 
-downSample : Int -> (List IQ -> IQ) -> List IQ -> List IQ
-downSample chunkLen _ [] = []
-downSample chunkLen f xs with (splitAt (cast chunkLen) xs)
-  _ | (chunk, rest) = (f chunk) :: (downSample chunkLen f rest)
-
 firFilter : Int -> List IQ -> List IQ
-firFilter w xs = downSample w averagedList xs
+firFilter w xs =
+  let
+    convolveBy : Int -> (List IQ -> IQ) -> List IQ -> IQ -> List IQ
+    convolveBy chunkLen _ [] _ = []
+    convolveBy chunkLen f xs p with (splitAt (cast chunkLen) xs)
+      _ | (chunk, rest) = (f (p :: chunk)) :: (convolveBy chunkLen f rest (f chunk))
+  in
+    convolveBy w averagedList xs (fromInteger 0)
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs =
