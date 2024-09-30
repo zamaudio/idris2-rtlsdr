@@ -45,9 +45,7 @@ data RWStream : Type where
   Done : RWStream
 
 reader : (rch : Channel RWStream) -> IQStream -> IO ()
-reader rch stream =
-  do
-    channelPut rch (Stream stream)
+reader rch stream = channelPut rch (Stream stream)
 
 writer : (wch : Channel RWStream) -> String -> Int -> Int -> IO ()
 writer wch fpath dsr thres =
@@ -67,8 +65,7 @@ run rch wch =
     run rch wch
 
 readAsyncCallback : Channel RWStream -> ReadAsyncFn
-readAsyncCallback rch ctx iqlist = do
-  reader rch (MkIQStream iqlist)
+readAsyncCallback rch ctx iqlist = reader rch (MkIQStream iqlist)
 
 record Args where
   constructor MkArgs
