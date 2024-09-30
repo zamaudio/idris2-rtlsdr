@@ -23,11 +23,7 @@ mag (MkIQ i q) =
     cast $ sqrt ( ii + qq ) * s
 
 demodAM : List IQ -> List Int16
-demodAM [] = []
-demodAM [_] = []
-demodAM (iq :: rest) =
-  let w = mag iq
-    in w :: demodAM rest
+demodAM = map mag
 
 averagedList : List IQ -> IQ
 averagedList xs =
