@@ -7,6 +7,7 @@ import Data.Either
 import Data.List
 import Data.String
 import System
+import System.Concurrency
 import System.FFI
 import System.File
 import System.File.Buffer
@@ -35,8 +36,39 @@ writeBufToFile fpath bytes = do
     Left err => printLn err
     Right () => pure ()
 
-readAsyncCallback : String -> Int -> Int -> ReadAsyncFn
-readAsyncCallback fpath thres drate ctx buf = writeBufToFile fpath (demodAMStream buf drate thres)
+record IQStream where
+  constructor MkIQStream
+  iqs : List IQ
+
+data RWStream : Type where
+  Stream : (stream : IQStream) -> RWStream
+  Done : RWStream
+
+reader : (rch : Channel RWStream) -> IQStream -> IO ()
+reader rch stream =
+  do
+    channelPut rch (Stream stream)
+
+writer : (wch : Channel RWStream) -> String -> Int -> Int -> IO ()
+writer wch fpath dsr thres =
+  do
+    (Stream wstream) <- channelGet wch
+      | Done => pure ()
+    writeBufToFile fpath (demodAMStream (wstream.iqs) dsr thres)
+    writer wch fpath dsr thres
+
+run : (rch : Channel RWStream) -> (wch : Channel RWStream) -> IO ()
+run rch wch =
+  do
+    (Stream rstream) <- channelGet rch
+      | Done => channelPut wch Done
+    wstream <- pure rstream
+    channelPut wch (Stream wstream)
+    run rch wch
+
+readAsyncCallback : Channel RWStream -> ReadAsyncFn
+readAsyncCallback rch ctx iqlist = do
+  reader rch (MkIQStream iqlist)
 
 record Args where
   constructor MkArgs
@@ -101,7 +133,13 @@ testAM args = do
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
 
       let thres = fromMaybe 15 args.thres -- default threshold of >15
-      _ <- readAsync h (readAsyncCallback fpath thres rate_downsample) prim__getNullAnyPtr 0 0
+
+      readCh <- makeChannel
+      writeCh <- makeChannel
+
+      _ <- fork (run readCh writeCh)
+      _ <- fork $ writer writeCh fpath rate_downsample thres
+      _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 0 0
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
