@@ -131,7 +131,7 @@ testAM args = do
       putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
 
       let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
-      let thres = fromMaybe 15 args.thres -- default threshold of >15
+      let thres = fromMaybe 30 args.thres -- default threshold of -30dB.
 
       let fpath = fromMaybe "/dev/stderr" args.fpath
       putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."

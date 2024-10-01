@@ -49,7 +49,16 @@ firFilter : Int -> List IQ -> List IQ
 firFilter w xs = downSample w averagedList xs
 
 thresholdFilter : Int -> List Int16 -> List Int16
-thresholdFilter t xs = map (\v => if abs(v) > (cast t) then v else 0) xs
+thresholdFilter t xs =
+  let
+    -- t is specified in dBFS without a minus sign, so we negate the value here
+    thresh_dBFS : Double
+    thresh_dBFS = cast (-t)
+
+    thresh_raw : Int16
+    thresh_raw = cast $ (32767.0 * exp(0.05 * thresh_dBFS * log(10.0)))
+  in
+    map (\v => if abs(v) < thresh_raw then 0 else v) xs
 
 export
 demodAMStream : List IQ -> Int -> Int -> List Int16
