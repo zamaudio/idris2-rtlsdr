@@ -79,33 +79,15 @@ record Args where
   thres : Maybe Int
   ppm   : Maybe Int
 
-testAM : Args -> IO ()
-testAM args = do
-  putStrLn "opening RTL SDR idx 0"
-  h <- rtlsdr_open 0
-  case h of
-    Nothing => putStrLn "Failed to open device handle"
-    Just h => do
-      --let fq_default = 133_250_000 -- YBTH AWIS
-      let fq_default = 127_350_000 -- YBTH CTAF
-      let fq = fromMaybe fq_default args.freq
-
-      let rate_in = 24_000
-      putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
-      let rate_iq = 1_008_000
-      putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
-      let rate_downsample = (500_000 `div` rate_in) + 1
-      putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
-
+cfgRTL : Ptr RtlSdrHandle -> Int -> Int -> Int -> IO ()
+cfgRTL h fq ppm r = do
       _ <- setTunerGainMode h False -- manual gain
       _ <- setTunerGain h (-100) -- auto
-
       _ <- setAGCMode h True -- ON
       _ <- setCenterFreq h fq
       _ <- setTunerBandwidth h 0 -- auto
       -- _ <- setDirectSampling h (SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED)
-      _ <- setSampleRate h rate_iq
-      let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
+      _ <- setSampleRate h r
       _ <- setFreqCorrection h ppm
 
       f <- getCenterFreq h
@@ -126,6 +108,29 @@ testAM args = do
       putStrLn $ "Sampling mode: " ++ (fromMaybe "<unknown>" $ map show $ getRight s)
       r <- getSampleRate h
       putStrLn $ "Sample rate: " ++ (show r)
+
+      io_pure ()
+
+testAM : Args -> IO ()
+testAM args = do
+  putStrLn "opening RTL SDR idx 0"
+  h <- rtlsdr_open 0
+  case h of
+    Nothing => putStrLn "Failed to open device handle"
+    Just h => do
+      --let fq_default = 133_250_000 -- YBTH AWIS
+      let fq_default = 127_350_000 -- YBTH CTAF
+      let fq = fromMaybe fq_default args.freq
+
+      let rate_in = 24_000
+      putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
+      let rate_iq = 1_008_000
+      putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
+      let rate_downsample = (500_000 `div` rate_in) + 1
+      putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
+
+      let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
+      cfgRTL h fq ppm rate_iq
 
       -- flush buffer
       _ <- resetBuffer h
