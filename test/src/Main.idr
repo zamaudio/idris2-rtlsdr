@@ -78,6 +78,7 @@ record Args where
   freq  : Maybe Int
   thres : Maybe Int
   ppm   : Maybe Int
+  rate  : Maybe Int
 
 cfgRTL : Ptr RtlSdrHandle -> Int -> Int -> Int -> IO ()
 cfgRTL h fq ppm r = do
@@ -122,7 +123,9 @@ testAM args = do
       let fq_default = 127_350_000 -- YBTH CTAF
       let fq = fromMaybe fq_default args.freq
 
-      let rate_in = 24_000
+      let rate_in_default = 24_000
+      let rate_in = fromMaybe rate_in_default args.rate
+
       putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
       let rate_iq = 1_008_000
       putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
@@ -173,11 +176,15 @@ parseArgs ("--ppm" :: p :: rest) =
   case parsePositive p of
     Nothing => \args => Left $ "--ppm: could not parse: " ++ p
     Just p' => parseArgs rest . {ppm := Just p'}
+parseArgs ("--rate" :: r :: rest) =
+  case parsePositive r of
+    Nothing => \args => Left $ "--rate: could not parse: " ++ r
+    Just r' => parseArgs rest . {rate := Just r'}
 parseArgs (arg :: rest) =
   \args => Left $ "unknown argument: " ++ arg
 
 defaultArgs : Args
-defaultArgs = MkArgs Nothing Nothing Nothing Nothing Nothing
+defaultArgs = MkArgs Nothing Nothing Nothing Nothing Nothing Nothing
 
 main : IO ()
 main = do
