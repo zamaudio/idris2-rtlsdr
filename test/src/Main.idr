@@ -11,6 +11,7 @@ import System.Concurrency
 import System.FFI
 import System.File
 import System.File.Buffer
+import System.Signal
 
 import AM
 import EEPromRead
@@ -45,9 +46,6 @@ data RWStream : Type where
   Stream : (stream : List IQ) -> RWStream
   Done : RWStream
 
-reader : (rch : Channel RWStream) -> List IQ -> IO ()
-reader rch stream = channelPut rch (Stream stream)
-
 writer : (wch : Channel RWStream) -> String -> Int -> Int -> IO ()
 writer wch fpath dsr thres =
   do
@@ -60,17 +58,28 @@ writer wch fpath dsr thres =
          Left _ => pure ()
          Right () => writer wch fpath dsr thres
 
-run : (rch : Channel RWStream) -> (wch : Channel RWStream) -> IO ()
-run rch wch =
+run : (rch : Channel RWStream) -> (wch : Channel RWStream) -> Ptr RtlSdrHandle -> Bool -> IO ()
+run rch wch h False =
   do
     (Stream rstream) <- channelGet rch
-      | Done => channelPut wch Done
-    wstream <- pure rstream
-    channelPut wch (Stream wstream)
-    run rch wch
+      | Done => pure ()
+    channelPut wch (Stream rstream)
+    sig <- handleNextCollectedSignal
+    case sig of
+         Just SigINT => do
+           putErr "Caught ^C"
+           _ <- cancelAsync h
+           putErr "Cancelled readAsync"
+           run rch wch h True
+         _ => run rch wch h False
+run rch wch h True =
+  do
+    (Stream rstream) <- channelGet rch
+      | Done => pure ()
+    run rch wch h True
 
 readAsyncCallback : Channel RWStream -> ReadAsyncFn
-readAsyncCallback rch ctx iqlist = reader rch iqlist
+readAsyncCallback rch ctx iqlist = channelPut rch (Stream iqlist)
 
 record Args where
   constructor MkArgs
@@ -144,15 +153,32 @@ testAM args = do
       -- flush buffer
       _ <- resetBuffer h
 
+      _ <- collectSignal SigINT
+
       readCh <- makeChannel
       writeCh <- makeChannel
 
-      _ <- fork $ run readCh writeCh
-      _ <- fork $ writer writeCh fpath rate_downsample thres
+      runTID <- fork $ run readCh writeCh h False
+      writeTID <- fork $ writer writeCh fpath rate_downsample thres
 
       -- Use 6x 4096 length buffers for each read process cycle instead of larger default.
       -- This allows realtime streaming of samples into sound card at 24kHz or 48kHz rate_in.
-      _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 6 4096
+      readTID <- fork $ do
+        _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 6 4096
+        pure ()
+
+      threadWait readTID
+      putErr "waited for reader to stop"
+
+      channelPut readCh Done
+      threadWait runTID
+
+      putErr "waited for run to stop"
+
+      channelPut writeCh Done
+      threadWait writeTID
+
+      putErr "waited for writer to stop"
 
       _ <- rtlsdr_close h
       putErr "Done, closing.."
