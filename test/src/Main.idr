@@ -15,17 +15,23 @@ import System.File.Buffer
 import AM
 import EEPromRead
 
-writeBufToFile : String -> List Int16 -> IO ()
-writeBufToFile fpath bytes = do
+
+-- Package up a List of S16 words of PCM into a Buffer.
+getWAV16Buffer : List Int16 -> IO (Maybe (Buffer, Int))
+getWAV16Buffer bytes = do
   let len : Int = cast (length bytes)
   Just buf <- newBuffer (2*len)
-    | Nothing => putStrLn "could not allocate buffer"
+    | Nothing => io_pure Nothing
 
   for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
     setBits16 buf (2*i) (cast w)
 
+  io_pure $ Just (buf, 2*len)
+
+writeBufToFile : String -> Buffer -> Int -> IO ()
+writeBufToFile fpath buf len = do
   result <- withFile fpath Append printLn $ \f => do
-    Right () <- writeBufferData f buf 0 (2*len)
+    Right () <- writeBufferData f buf 0 len
       | Left (err, len) => do
           printLn ("could not writeBufferData", err, len)
           pure $ Left ()
@@ -52,7 +58,9 @@ writer wch fpath dsr thres =
   do
     (Stream wstream) <- channelGet wch
       | Done => pure ()
-    writeBufToFile fpath (demodAMStream (wstream.iqs) dsr thres)
+    Just (buf, len) <- getWAV16Buffer (demodAMStream (wstream.iqs) dsr thres)
+      | Nothing => putStrLn "getWAV16Buffer could not allocate buffer"
+    writeBufToFile fpath buf len
     writer wch fpath dsr thres
 
 run : (rch : Channel RWStream) -> (wch : Channel RWStream) -> IO ()
