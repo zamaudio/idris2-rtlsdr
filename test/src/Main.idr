@@ -133,20 +133,20 @@ testAM args = do
       putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
 
       let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
+      let thres = fromMaybe 15 args.thres -- default threshold of >15
+
+      let fpath = fromMaybe "/dev/stderr" args.fpath
+      putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
+
       cfgRTL h fq ppm rate_iq
 
       -- flush buffer
       _ <- resetBuffer h
 
-      let fpath = fromMaybe "/dev/stderr" args.fpath
-      putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
-
-      let thres = fromMaybe 15 args.thres -- default threshold of >15
-
       readCh <- makeChannel
       writeCh <- makeChannel
 
-      _ <- fork (run readCh writeCh)
+      _ <- fork $ run readCh writeCh
       _ <- fork $ writer writeCh fpath rate_downsample thres
       _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 0 0
 
