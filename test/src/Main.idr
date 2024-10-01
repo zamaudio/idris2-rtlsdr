@@ -28,19 +28,15 @@ getWAV16Buffer bytes = do
 
   io_pure $ Just (buf, 2*len)
 
-writeBufToFile : String -> Buffer -> Int -> IO ()
+writeBufToFile : String -> Buffer -> Int -> IO (Either () ())
 writeBufToFile fpath buf len = do
-  result <- withFile fpath Append printLn $ \f => do
+  withFile fpath Append printLn $ \f => do
     Right () <- writeBufferData f buf 0 len
       | Left (err, len) => do
           printLn ("could not writeBufferData", err, len)
           pure $ Left ()
 
     pure $ Right ()
-
-  case result of
-    Left err => printLn err
-    Right () => pure ()
 
 data RWStream : Type where
   Stream : (stream : List IQ) -> RWStream
@@ -56,8 +52,10 @@ writer wch fpath dsr thres =
       | Done => pure ()
     Just (buf, len) <- getWAV16Buffer (demodAMStream wstream dsr thres)
       | Nothing => putStrLn "getWAV16Buffer could not allocate buffer"
-    writeBufToFile fpath buf len
-    writer wch fpath dsr thres
+    r <- writeBufToFile fpath buf len
+    case r of
+         Left _ => pure ()
+         Right () => writer wch fpath dsr thres
 
 run : (rch : Channel RWStream) -> (wch : Channel RWStream) -> IO ()
 run rch wch =
