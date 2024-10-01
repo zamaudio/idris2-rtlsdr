@@ -42,15 +42,11 @@ writeBufToFile fpath buf len = do
     Left err => printLn err
     Right () => pure ()
 
-record IQStream where
-  constructor MkIQStream
-  iqs : List IQ
-
 data RWStream : Type where
-  Stream : (stream : IQStream) -> RWStream
+  Stream : (stream : List IQ) -> RWStream
   Done : RWStream
 
-reader : (rch : Channel RWStream) -> IQStream -> IO ()
+reader : (rch : Channel RWStream) -> List IQ -> IO ()
 reader rch stream = channelPut rch (Stream stream)
 
 writer : (wch : Channel RWStream) -> String -> Int -> Int -> IO ()
@@ -58,7 +54,7 @@ writer wch fpath dsr thres =
   do
     (Stream wstream) <- channelGet wch
       | Done => pure ()
-    Just (buf, len) <- getWAV16Buffer (demodAMStream (wstream.iqs) dsr thres)
+    Just (buf, len) <- getWAV16Buffer (demodAMStream wstream dsr thres)
       | Nothing => putStrLn "getWAV16Buffer could not allocate buffer"
     writeBufToFile fpath buf len
     writer wch fpath dsr thres
@@ -73,7 +69,7 @@ run rch wch =
     run rch wch
 
 readAsyncCallback : Channel RWStream -> ReadAsyncFn
-readAsyncCallback rch ctx iqlist = reader rch (MkIQStream iqlist)
+readAsyncCallback rch ctx iqlist = reader rch iqlist
 
 record Args where
   constructor MkArgs
