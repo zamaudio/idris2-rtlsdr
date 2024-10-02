@@ -127,7 +127,9 @@ testAM args = do
       putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
       let rate_iq = 1_008_000
       putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
-      let rate_downsample = (500_000 `div` rate_in) + 1
+      -- Each IQ pair maps to one Amplitude sample, thus 1/2 the IQ sample rate
+      -- multiplied by the reciprocal target output sample rate.
+      let rate_downsample = rate_iq `div` (2*rate_in)
       putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
 
       let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
