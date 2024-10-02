@@ -38,7 +38,7 @@ firFilter w xs =
     convolveBy : Nat -> List IQ -> IQ -> List IQ
     convolveBy l [] _ = []
     convolveBy l xs p with (splitAt l xs)
-      _ | (chunk, rest) = (sumIQChunk (p :: chunk)) :: (convolveBy l rest (sumIQChunk chunk))
+      _ | (chunk, rest) = (sumIQChunk (p :: chunk)) :: convolveBy l rest (sumIQChunk chunk)
   in
     convolveBy (cast w) xs (fromInteger 0)
 
