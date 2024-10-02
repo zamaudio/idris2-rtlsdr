@@ -6,25 +6,28 @@ import Data.List
 
 import Bindings.RtlSdr
 
--- Calculate the magnitude of the IQ vector and scale it,
--- scale is defined as S16_MAX_SZ/(128*downsample_rate)
-mag : Int -> IQ -> Int16
-mag r (MkIQ i q) =
-  let
-    ii : Double
-    ii = cast i * cast i
-
-    qq : Double
-    qq = cast q * cast q
-
-    s : Double
-    -- 256.0 which equals cast $ (1 `shiftL` 15) `div` 128
-    s = cast $ 256 `div` r
-  in
-    cast $ sqrt ( ii + qq ) * s
 
 demodAM : List IQ -> Int -> List Int16
-demodAM xs r = map (mag r) xs
+demodAM xs r =
+  let
+    -- Calculate the magnitude of the IQ vector and scale it,
+    -- scale is defined as S16_MAX_SZ/(128*downsample_rate)
+    mag : Int -> IQ -> Int16
+    mag r (MkIQ i q) =
+      let
+        ii : Double
+        ii = cast i * cast i
+
+        qq : Double
+        qq = cast q * cast q
+
+        s : Double
+        -- 256.0 which equals cast $ (1 `shiftL` 15) `div` 128
+        s = cast $ 256 `div` r
+      in
+        cast $ sqrt ( ii + qq ) * s
+  in
+    map (mag r) xs
 
 firFilter : Int -> List IQ -> List IQ
 firFilter w xs =
