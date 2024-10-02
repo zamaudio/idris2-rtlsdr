@@ -34,4 +34,4 @@ jobs:
       - name: Build lib
         run: pack --no-prompt install rtlsdr
       - name: Run test
-        run: pack --no-prompt test rtlsdr
+        run: LD_LIBRARY_PATH=/__w/idris2-rtlsdr/idris2-rtlsdr/lib pack --no-prompt test rtlsdr
