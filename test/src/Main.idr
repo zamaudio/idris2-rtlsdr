@@ -31,12 +31,13 @@ getWAV16Buffer words = do
 writeBufToFile : String -> Buffer -> Int -> IO (Either () ())
 writeBufToFile fpath buf len = do
   withFile fpath Append printLn $ \f => do
-    Right () <- writeBufferData f buf 0 len
-      | Left (err, len) => do
-          printLn ("could not writeBufferData", err, len)
-          pure $ Left ()
+    x <- writeBufferData f buf 0 len
+    case x of
+         Right () => pure $ Right ()
+         Left (err, len) => do
+           printLn ("could not writeBufferData", err, len)
+           pure $ Left () -- FIXME: should return (err, len) instead.
 
-    pure $ Right ()
 
 data RWStream : Type where
   Stream : (stream : List IQ) -> RWStream
