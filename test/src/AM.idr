@@ -7,9 +7,9 @@ import Data.List
 import Bindings.RtlSdr
 
 -- Calculate the magnitude of the IQ vector and scale it,
--- scale is defined as S16_MAX_SZ/128.
-mag : IQ -> Int16
-mag (MkIQ i q) =
+-- scale is defined as S16_MAX_SZ/(128*downsample_rate)
+mag : Int -> IQ -> Int16
+mag r (MkIQ i q) =
   let
     ii : Double
     ii = cast i * cast i
@@ -18,37 +18,26 @@ mag (MkIQ i q) =
     qq = cast q * cast q
 
     s : Double
-    s = 256.0 -- which equals cast $ (1 `shiftL` 15) `div` 128
+    -- 256.0 which equals cast $ (1 `shiftL` 15) `div` 128
+    s = cast $ 256 `div` r
   in
     cast $ sqrt ( ii + qq ) * s
 
-demodAM : List IQ -> List Int16
-demodAM = map mag
-
-averagedList : List IQ -> IQ
-averagedList xs =
-  let
-    len : Int16
-    len = cast $ length xs
-
-    divIQ : IQ -> Int16 -> IQ
-    divIQ (MkIQ i q) d = MkIQ (i `div` d) (q `div` d)
-
-    sumIQs : List IQ -> IQ
-    sumIQs xs = foldr (+) (fromInteger 0) xs
-
-  in
-    divIQ (sumIQs xs) len
+demodAM : List IQ -> Int -> List Int16
+demodAM xs r = map (mag r) xs
 
 firFilter : Int -> List IQ -> List IQ
 firFilter w xs =
   let
+    sumIQChunk : List IQ -> IQ
+    sumIQChunk xs = foldr (+) (fromInteger 0) xs
+
     convolveBy : Int -> (List IQ -> IQ) -> List IQ -> IQ -> List IQ
     convolveBy chunkLen _ [] _ = []
     convolveBy chunkLen f xs p with (splitAt (cast chunkLen) xs)
       _ | (chunk, rest) = (f (p :: chunk)) :: (convolveBy chunkLen f rest (f chunk))
   in
-    convolveBy w averagedList xs (fromInteger 0)
+    convolveBy w sumIQChunk xs (fromInteger 0)
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs =
@@ -69,6 +58,6 @@ demodAMStream l dsr t =
     dsample : List IQ
     dsample = firFilter dsr l
     demod   : List Int16
-    demod   = demodAM dsample
+    demod   = demodAM dsample dsr
   in
     thresholdFilter t demod
