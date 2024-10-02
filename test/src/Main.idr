@@ -18,12 +18,12 @@ import EEPromRead
 
 -- Package up a List of S16 words of PCM into a Buffer.
 getWAV16Buffer : List Int16 -> IO (Maybe (Buffer, Int))
-getWAV16Buffer bytes = do
-  let len : Int = cast (length bytes)
-  Just buf <- newBuffer (2*len)
+getWAV16Buffer words = do
+  let len : Int = cast (length words)
+  Just buf <- newBuffer (2*len) -- 2Bytes in 16Bit word.
     | Nothing => io_pure Nothing
 
-  for_ (zip [0 .. len-1] bytes) $ \(i, w) =>
+  for_ (zip [0 .. len-1] words) $ \(i, w) =>
     setBits16 buf (2*i) (cast w)
 
   io_pure $ Just (buf, 2*len)
