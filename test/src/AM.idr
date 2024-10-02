@@ -32,12 +32,12 @@ firFilter w xs =
     sumIQChunk : List IQ -> IQ
     sumIQChunk xs = foldr (+) (fromInteger 0) xs
 
-    convolveBy : Int -> (List IQ -> IQ) -> List IQ -> IQ -> List IQ
-    convolveBy chunkLen _ [] _ = []
-    convolveBy chunkLen f xs p with (splitAt (cast chunkLen) xs)
-      _ | (chunk, rest) = (f (p :: chunk)) :: (convolveBy chunkLen f rest (f chunk))
+    convolveBy : Nat -> List IQ -> IQ -> List IQ
+    convolveBy l [] _ = []
+    convolveBy l xs p with (splitAt l xs)
+      _ | (chunk, rest) = (sumIQChunk (p :: chunk)) :: (convolveBy l rest (sumIQChunk chunk))
   in
-    convolveBy w sumIQChunk xs (fromInteger 0)
+    convolveBy (cast w) xs (fromInteger 0)
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs =
