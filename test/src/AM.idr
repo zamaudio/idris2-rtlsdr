@@ -30,7 +30,8 @@ demodAM xs r =
     map (mag r) xs
 
 firFilter : Int -> List IQ -> List IQ
-firFilter w xs =
+firFilter w [] = []
+firFilter w (x :: rest) =
   let
     sumIQChunk : List IQ -> IQ
     sumIQChunk xs = foldr (+) (fromInteger 0) xs
@@ -40,7 +41,7 @@ firFilter w xs =
     convolveBy l xs p with (splitAt l xs)
       _ | (chunk, rest) = (sumIQChunk (p :: chunk)) :: convolveBy l rest (sumIQChunk chunk)
   in
-    convolveBy (cast w) xs (fromInteger 0)
+    convolveBy (cast (w-1)) rest x
 
 thresholdFilter : Int -> List Int16 -> List Int16
 thresholdFilter t xs =
