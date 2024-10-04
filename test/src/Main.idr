@@ -147,7 +147,10 @@ testAM args = do
 
       _ <- fork $ run readCh writeCh
       _ <- fork $ writer writeCh fpath rate_downsample thres
-      _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 0 0
+
+      -- Use 6x 4096 length buffers for each read process cycle instead of larger default.
+      -- This allows realtime streaming of samples into sound card at 24kHz or 48kHz rate_in.
+      _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 6 4096
 
       _ <- rtlsdr_close h
       putStrLn "Done, closing.."
