@@ -15,6 +15,8 @@ import System.File.Buffer
 import AM
 import EEPromRead
 
+putErr : String -> IO ()
+putErr s = ignore $ fPutStrLn stderr s
 
 -- Package up a List of S16 words of PCM into a Buffer.
 getWAV16Buffer : List Int16 -> IO (Maybe (Buffer, Int))
@@ -52,7 +54,7 @@ writer wch fpath dsr thres =
     (Stream wstream) <- channelGet wch
       | Done => pure ()
     Just (buf, len) <- getWAV16Buffer (demodAMStream wstream dsr thres)
-      | Nothing => putStrLn "getWAV16Buffer could not allocate buffer"
+      | Nothing => putErr "getWAV16Buffer could not allocate buffer"
     r <- writeBufToFile fpath buf len
     case r of
          Left _ => pure ()
@@ -91,32 +93,32 @@ cfgRTL h fq ppm r = do
       _ <- setFreqCorrection h ppm
 
       f <- getCenterFreq h
-      putStrLn $ "Freq set to: " ++ (show f)
+      putErr $ "Freq set to: " ++ (show f)
 
       fc <- getFreqCorrection h
-      putStrLn $ "Freq correction set to: " ++ (show fc)
+      putErr $ "Freq correction set to: " ++ (show fc)
 
       gs <- getTunerGains h
-      putStrLn $ "Gains: " ++ (show gs)
+      putErr $ "Gains: " ++ (show gs)
       g <- getTunerGain h
-      putStrLn $ "Gain: " ++ (fromMaybe "<unknown>" $ map show $ getRight g)
+      putErr $ "Gain: " ++ (fromMaybe "<unknown>" $ map show $ getRight g)
       f <- getCenterFreq h
-      putStrLn $ "Freq: " ++ (fromMaybe "<unknown>" $ map show $ getRight f)
+      putErr $ "Freq: " ++ (fromMaybe "<unknown>" $ map show $ getRight f)
       o <- getOffsetTuning h
-      putStrLn $ "Tuner offset: " ++ (fromMaybe "<unknown>" $ map show $ getRight o)
+      putErr $ "Tuner offset: " ++ (fromMaybe "<unknown>" $ map show $ getRight o)
       s <- getDirectSampling h
-      putStrLn $ "Sampling mode: " ++ (fromMaybe "<unknown>" $ map show $ getRight s)
+      putErr $ "Sampling mode: " ++ (fromMaybe "<unknown>" $ map show $ getRight s)
       r <- getSampleRate h
-      putStrLn $ "Sample rate: " ++ (show r)
+      putErr $ "Sample rate: " ++ (show r)
 
       io_pure ()
 
 testAM : Args -> IO ()
 testAM args = do
-  putStrLn "opening RTL SDR idx 0"
+  putErr "opening RTL SDR idx 0"
   h <- rtlsdr_open 0
   case h of
-    Nothing => putStrLn "Failed to open device handle"
+    Nothing => putErr "Failed to open device handle"
     Just h => do
       --let fq_default = 133_250_000 -- YBTH AWIS
       let fq_default = 127_350_000 -- YBTH CTAF
@@ -125,17 +127,17 @@ testAM args = do
       let rate_in_default = 24_000
       let rate_in = fromMaybe rate_in_default args.rate
 
-      putStrLn $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
+      putErr $ "Using a in rate of: " ++ (show $ rate_in `div` 1_000) ++ " kHz."
       let rate_downsample = (1_000_000 `div` rate_in) + 1
-      putStrLn $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
+      putErr $ "Calculated downsampling of: " ++ (show rate_downsample) ++ "x."
       let rate_iq = rate_downsample * rate_in
-      putStrLn $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
+      putErr $ "Sampling IQ stream at: " ++ (show $ rate_iq `div` 1_000) ++ "kHz."
 
       let ppm = fromMaybe 0 args.ppm -- default ppm of zero.
       let thres = fromMaybe 30 args.thres -- default threshold of -30dB.
 
-      let fpath = fromMaybe "/dev/stderr" args.fpath
-      putStrLn $ "File to write out to '" ++ (show fpath) ++ "'."
+      let fpath = fromMaybe "/dev/stdout" args.fpath
+      putErr $ "File to write out to '" ++ (show fpath) ++ "'."
 
       cfgRTL h fq ppm rate_iq
 
@@ -153,14 +155,14 @@ testAM args = do
       _ <- readAsync h (readAsyncCallback readCh) prim__getNullAnyPtr 6 4096
 
       _ <- rtlsdr_close h
-      putStrLn "Done, closing.."
+      putErr "Done, closing.."
 
 
 testDeviceFound : IO ()
 testDeviceFound = do
   let n = get_device_count
-  putStrLn $ "Device Count: " ++ show n
-  for_ [0..n-1] $ \k => putStrLn $ "Device Name: " ++ get_device_name k
+  putErr $ "Device Count: " ++ show n
+  for_ [0..n-1] $ \k => putErr $ "Device Name: " ++ get_device_name k
 
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
@@ -191,9 +193,9 @@ defaultArgs = MkArgs Nothing Nothing Nothing Nothing Nothing Nothing
 main : IO ()
 main = do
   exeName :: args' <- getArgs
-    | [] => putStrLn "impossible: empty args"
+    | [] => putErr "impossible: empty args"
   case parseArgs args' defaultArgs of
-    Left err => putStrLn err
+    Left err => putErr err
     Right args => do
       testDeviceFound
       testDumpEEProm args.dpath
