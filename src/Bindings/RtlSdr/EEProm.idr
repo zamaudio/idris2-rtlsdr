@@ -38,3 +38,16 @@ readEEProm h o l = do
   for_ (zip [0 .. l-1] b') $ \(i, w) =>
     setBits8 buf i (cast w)
   io_pure $ if r < 0 then Left (decodeRetError r) else Right buf
+
+
+||| Write EEPROM connected to RTL device
+|||
+||| @h is the device handle
+||| @b is the buffer of data to be written
+||| @o is the offset address where the data should be written to
+export
+writeEEProm : Ptr RtlSdrHandle -> Buffer -> Int -> IO (Either RTLSDR_ERROR ())
+writeEEProm h b o = do
+  len <- rawSize b
+  r <- fromPrim $ write_eeprom h b o len
+  io_pure $ if r < 0 then Left (decodeRetError r) else Right ()
