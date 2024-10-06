@@ -47,6 +47,9 @@ Show DeviceUSBStrings where
 export
 getDeviceUSBStrings : Int -> IO (Either RTLSDR_ERROR DeviceUSBStrings)
 getDeviceUSBStrings i = do
+  -- REMARK: The C API is buggy and doesn't validate a dev is available
+  -- before attempting to read strings, therefore n > 0 otherwise error.
+  let n = get_device_count
   -- NOTE: The string arguments must provide space for up to 256 bytes.
   m <- prim__castPtr <$> malloc 256
   p <- prim__castPtr <$> malloc 256
@@ -57,7 +60,7 @@ getDeviceUSBStrings i = do
   free $ prim__forgetPtr m
   free $ prim__forgetPtr p
   free $ prim__forgetPtr s
-  io_pure $ if r == 0 then Right ds else Left RtlSdrError
+  io_pure $ if (r == 0 && n > 0) then Right ds else Left RtlSdrError
 
 decodeRetError : Int -> RTLSDR_ERROR
 decodeRetError e = case e of
