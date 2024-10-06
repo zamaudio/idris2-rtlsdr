@@ -6,3 +6,7 @@ level RTLSDR effects.
 ```
  $ sudo dnf install rtl-sdr-devel
 ```
+
+# Docs
+
+You can find the API documentation published [here](https://victoredwardocallaghan.github.io/idris2-rtlsdr).
