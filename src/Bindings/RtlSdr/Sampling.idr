@@ -38,24 +38,27 @@ setAGCMode h t = do
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
 public export
-data SamplingType = SAMPLING_DISABLED | SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED
+data SamplingType = SAMPLING_DISABLED | SAMPLING_I_ADC_ENABLED | SAMPLING_Q_ADC_ENABLED | SAMPLING_IQ_ADC_ENABLED
 
 export
 Show SamplingType where
   show SAMPLING_DISABLED      = "Disabled"
   show SAMPLING_I_ADC_ENABLED = "I-ADC Input Enabled"
   show SAMPLING_Q_ADC_ENABLED = "Q-ADC Input Enabled"
+  show SAMPLING_IQ_ADC_ENABLED = "IQ-ADC Input Enabled"
 
 toSamplingType : Int -> Maybe SamplingType
 toSamplingType 0 = Just SAMPLING_DISABLED
 toSamplingType 1 = Just SAMPLING_I_ADC_ENABLED
 toSamplingType 2 = Just SAMPLING_Q_ADC_ENABLED
+toSamplingType 3 = Just SAMPLING_IQ_ADC_ENABLED
 toSamplingType _ = Nothing
 
 fromSamplingType : SamplingType -> Int
 fromSamplingType SAMPLING_DISABLED      = 0
 fromSamplingType SAMPLING_I_ADC_ENABLED = 1
 fromSamplingType SAMPLING_Q_ADC_ENABLED = 2
+fromSamplingType SAMPLING_IQ_ADC_ENABLED = 3
 
 ||| Enable or disable the direct sampling mode. When enabled, the IF mode
 ||| of the RTL2832 is activated, and `setCenterFreq` will control
