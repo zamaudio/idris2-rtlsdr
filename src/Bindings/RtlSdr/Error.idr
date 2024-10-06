@@ -7,6 +7,7 @@ data RTLSDR_ERROR = RtlSdrError
                   | RtlSdrHandleInvalid
                   | RtlSdrEEPromSizeExceeded
                   | RtlSdrEEPromNotFound
+                  | RtlSdrInvalidFreq
                   | RtlSdrInvalidRate
                   | RtlSdrDeviceNameEmpty
                   | RtlSdrDeviceNotFound
@@ -18,6 +19,7 @@ Show RTLSDR_ERROR where
   show RtlSdrHandleInvalid      = "device handle is invalid"
   show RtlSdrEEPromSizeExceeded = "EEPROM size is exceeded"
   show RtlSdrEEPromNotFound     = "no EEPROM was found"
+  show RtlSdrInvalidFreq        = "frequency could not be set"
   show RtlSdrInvalidRate        = "invalid sample rate"
   show RtlSdrDeviceNameEmpty    = "device name is null"
   show RtlSdrDeviceNotFound     = "no devices were found at all"
