@@ -53,3 +53,25 @@ getOffsetTuning : Ptr RtlSdrHandle -> IO (Either RTLSDR_ERROR Bool)
 getOffsetTuning h = do
   r <- fromPrim $ get_offset_tuning h
   io_pure $ if r < 0 then Left RtlSdrError else Right (if r == 0 then False else True)
+
+
+||| Enable or disable the bias tee on GPIO PIN 0.
+|||
+||| @h is the device handle
+||| @t is the toggle of `True` for Bias T on. `False` for Bias T off.
+export
+setBiasTee : Ptr RtlSdrHandle -> Bool -> IO (Either RTLSDR_ERROR ())
+setBiasTee h t = do
+  r <- fromPrim $ set_bias_tee h (if t == True then 1 else 0)
+  io_pure $ if r == 0 then Right () else Left RtlSdrError
+
+||| Enable or disable the bias tee on the given GPIO pin.
+|||
+||| @h is the device handle
+||| @g is the gpio pin to configure as a Bias T control.
+||| @t is the toggle of `True` for Bias T on. `False` for Bias T off.
+export
+setBiasTeeGpio : Ptr RtlSdrHandle -> Int -> Bool -> IO (Either RTLSDR_ERROR ())
+setBiasTeeGpio h g t = do
+  r <- fromPrim $ set_bias_tee_gpio h g (if t == True then 1 else 0)
+  io_pure $ if r == 0 then Right () else Left RtlSdrError

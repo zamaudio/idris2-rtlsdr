@@ -23,9 +23,9 @@ get_offset_tuning: Ptr RtlSdrHandle -> PrimIO Int
 -- RTLSDR_API int rtlsdr_set_bias_tee(rtlsdr_dev_t *dev, int on);
 export
 %foreign (librtlsdr "set_bias_tee")
-set_bias_tee: Ptr RtlSdrHandle -> Int -> Int
+set_bias_tee: Ptr RtlSdrHandle -> Int -> PrimIO Int
 
 -- RTLSDR_API int rtlsdr_set_bias_tee_gpio(rtlsdr_dev_t *dev, int gpio, int on);
 export
 %foreign (librtlsdr "set_bias_tee_gpio")
-set_bias_tee_gpio: Ptr RtlSdrHandle -> Int -> Int -> Int
+set_bias_tee_gpio: Ptr RtlSdrHandle -> Int -> Int -> PrimIO Int
