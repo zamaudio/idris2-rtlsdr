@@ -31,3 +31,7 @@ readBufPtr' p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref' p i
 export
 peekInt : Ptr Int -> Int
 peekInt p = idris_rtlsdr_read_ptr_ref p 0
+
+export
+%foreign (idris_rtlsdr "getstring")
+idris_rtlsdr_getstring : Ptr String -> String

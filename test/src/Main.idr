@@ -189,6 +189,9 @@ testDeviceFound = do
   let n = get_device_count
   putErr $ "Device Count: " ++ show n
   for_ [0..n-1] $ \k => putErr $ "Device Name: " ++ get_device_name k
+  for_ [0..n-1] $ \k => do
+    Right ds <- getDeviceUSBStrings 0 | Left _ => pure ()
+    putErr $ "Found: " ++ (show ds)
 
 parseArgs : List String -> Args -> Either String Args
 parseArgs [] = Right
