@@ -5,6 +5,7 @@ import Bindings.RtlSdr.Device
 import Bindings.RtlSdr.Error
 import Bindings.RtlSdr.Raw.Support
 
+import Data.Buffer
 import System.FFI
 
 %default total
@@ -55,11 +56,11 @@ toIQList (xs::ys::rest) = (toIQ xs ys) :: toIQList rest
 ||| Read samples from the device synchronously.
 |||
 ||| @h is the device handle
-||| @b a pointer to a buffer to write samples to
-||| @l the length of the buffer
+||| @b is a buffer to write samples to
 export
-readSync : Ptr RtlSdrHandle -> AnyPtr -> Int -> IO (Either RTLSDR_ERROR Int)
-readSync h b l = do
+readSync : Ptr RtlSdrHandle -> Buffer -> IO (Either RTLSDR_ERROR Int)
+readSync h b = do
+  l <- rawSize b
   v <- prim__castPtr <$> malloc 4 -- n_read
   r <- fromPrim $ read_sync h b l v
   let nr = peekInt v

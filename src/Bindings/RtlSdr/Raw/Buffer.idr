@@ -2,6 +2,8 @@ module Bindings.RtlSdr.Raw.Buffer
 
 import Bindings.RtlSdr.Device
 
+import Data.Buffer
+
 %default total
 
 -- RTLSDR_API int rtlsdr_reset_buffer(rtlsdr_dev_t *dev);
@@ -12,7 +14,7 @@ reset_buffer: Ptr RtlSdrHandle -> PrimIO Int
 -- RTLSDR_API int rtlsdr_read_sync(rtlsdr_dev_t *dev, void *buf, int len, int *n_read);
 export
 %foreign (librtlsdr "read_sync")
-read_sync: Ptr RtlSdrHandle -> AnyPtr -> Int -> Ptr Int -> PrimIO Int
+read_sync: Ptr RtlSdrHandle -> Buffer -> Int -> Ptr Int -> PrimIO Int
 
 -- typedef void(*rtlsdr_read_async_cb_t)(unsigned char *buf, uint32_t len, void *ctx);
 ReadAsyncFnPrim = Ptr Bits8 -> Int -> AnyPtr -> PrimIO ()
