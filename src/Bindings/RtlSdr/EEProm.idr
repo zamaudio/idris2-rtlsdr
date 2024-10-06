@@ -27,16 +27,9 @@ decodeRetError e = case e of
 export
 readEEProm : Ptr RtlSdrHandle -> Int -> Int -> IO (Either RTLSDR_ERROR Buffer)
 readEEProm h o l = do
-  b <- prim__castPtr <$> malloc l -- length in bytes
-  r <- fromPrim $ read_eeprom h b o l
-
-  b' <- readBufPtr' b l
-  free $ prim__forgetPtr b
-
   Just buf <- newBuffer l
     | Nothing => io_pure $ Left RtlSdrError
-  for_ (zip [0 .. l-1] b') $ \(i, w) =>
-    setBits8 buf i (cast w)
+  r <- fromPrim $ read_eeprom h buf o l
   io_pure $ if r < 0 then Left (decodeRetError r) else Right buf
 
 

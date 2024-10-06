@@ -16,4 +16,4 @@ write_eeprom: Ptr RtlSdrHandle -> Buffer -> Int -> Int -> PrimIO Int
 -- 				  uint8_t offset, uint16_t len);
 export
 %foreign (librtlsdr "read_eeprom")
-read_eeprom: Ptr RtlSdrHandle -> Ptr Bits8 -> Int -> Int -> PrimIO Int
+read_eeprom: Ptr RtlSdrHandle -> Buffer -> Int -> Int -> PrimIO Int
