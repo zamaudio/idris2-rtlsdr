@@ -31,6 +31,6 @@ clean:
 .PHONY: install
 install:
 	mkdir -p $(INSTALLDIR)
-	install $(TARGET) $(wildcard *.h) $(INSTALLDIR)
+	install $(TARGET) $(INSTALLDIR)
 	$(DYLIB_WORKAROUND)
 
