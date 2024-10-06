@@ -186,6 +186,10 @@ testAM args = do
 
 testDeviceFound : IO ()
 testDeviceFound = do
+  let di = getDeviceIndexBySerial "xxx"
+  putErr $ "Search for device with serial 'xxx': " ++ (show di)
+  let di' = getDeviceIndexBySerial "00000001"
+  putErr $ "Search for device with serial '00000001': " ++ (show di')
   let n = get_device_count
   putErr $ "Device Count: " ++ show n
   for_ [0..n-1] $ \k => putErr $ "Device Name: " ++ get_device_name k

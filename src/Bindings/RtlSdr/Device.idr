@@ -58,3 +58,21 @@ getDeviceUSBStrings i = do
   free $ prim__forgetPtr p
   free $ prim__forgetPtr s
   io_pure $ if r == 0 then Right ds else Left RtlSdrError
+
+decodeRetError : Int -> RTLSDR_ERROR
+decodeRetError e = case e of
+                        -1 => RtlSdrDeviceNameEmpty
+                        -2 => RtlSdrDeviceNotFound
+                        -3 => RtlSdrDeviceFoundButNotMatching
+                        _ =>  RtlSdrError -- unknonwn
+
+||| Get device index by USB serial string descriptor.
+|||
+||| Returns the device index of first device where the name matched
+|||
+||| @s is the serial string of the device
+export
+getDeviceIndexBySerial : String -> Either RTLSDR_ERROR Int
+getDeviceIndexBySerial s = do
+  let r = get_index_by_serial s
+  if r < 0 then Left (decodeRetError r) else Right r

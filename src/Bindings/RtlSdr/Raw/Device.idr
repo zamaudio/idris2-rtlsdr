@@ -32,6 +32,11 @@ export
 %foreign (librtlsdr "get_device_name")
 get_device_name: Int -> String
 
+-- RTLSDR_API int rtlsdr_get_index_by_serial(const char *serial);
+export
+%foreign (librtlsdr "get_index_by_serial")
+get_index_by_serial: String -> Int
+
 -- RTLSDR_API int rtlsdr_open(rtlsdr_dev_t **dev, uint32_t index);
 export
 %foreign (librtlsdr "open")
