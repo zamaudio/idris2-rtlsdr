@@ -1,3 +1,7 @@
+||| RtlSdr turns your Realtek RTL2832 based DVB dongle into a SDR receiver.
+|||
+||| Idris2 bindings to librtl-sdr allows for both low-level thin-bindings
+||| as well as high-level fat-bindings.
 module Bindings.RtlSdr
 
 import public Bindings.RtlSdr.Buffer as Buffer
