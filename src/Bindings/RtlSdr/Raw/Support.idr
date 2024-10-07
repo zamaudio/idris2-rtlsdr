@@ -1,5 +1,6 @@
 module Bindings.RtlSdr.Raw.Support
 
+import Data.IOArray
 import System.FFI
 
 %default total
@@ -25,8 +26,18 @@ readBufPtr p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref p i
 idris_rtlsdr_read_ptr_ref' : Ptr Bits8 -> Int -> Bits8
 
 export
-readBufPtr' : Ptr Bits8 -> Int -> IO (List Bits8)
-readBufPtr' p n = for [0..n-1] $ \i => io_pure $ idris_rtlsdr_read_ptr_ref' p i
+readBufPtr' : Ptr Bits8 -> Int -> IO (IOArray Bits8)
+readBufPtr' p n =
+  let
+    readBufPtr'' : Ptr Bits8 -> Nat -> IOArray Bits8 -> IO (IOArray Bits8)
+    readBufPtr'' p 0 ioa = do
+      ignore $ writeArray ioa 0 $ idris_rtlsdr_read_ptr_ref' p 0
+      io_pure ioa
+    readBufPtr'' p (S i) ioa = do
+      ignore $ writeArray ioa (cast {to = Int} i) $ idris_rtlsdr_read_ptr_ref' p (cast {to = Int} i)
+      readBufPtr'' p i ioa
+  in
+    readBufPtr'' p (cast n) =<< newArray n
 
 export
 peekInt : Ptr Int -> Int

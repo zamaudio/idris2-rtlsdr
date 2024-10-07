@@ -6,6 +6,7 @@ import Bindings.RtlSdr.Error
 import Bindings.RtlSdr.Raw.Support
 
 import Data.Buffer
+import Data.IOArray
 import System.FFI
 
 %default total
@@ -37,10 +38,34 @@ scaleIQ v = (cast {to = Int16} v) - 128
 toIQ : Bits8 -> Bits8 -> IQ
 toIQ i q = MkIQ (scaleIQ i) (scaleIQ q)
 
-toIQList : List Bits8 -> List IQ
-toIQList [] = []
-toIQList [_] = []
-toIQList (xs::ys::rest) = (toIQ xs ys) :: toIQList rest
+toIQArray : IOArray Bits8 -> IO (IOArray IQ)
+toIQArray s =
+  let
+    toIQArray' : IOArray Bits8 -> Nat -> IOArray IQ -> IO (IOArray IQ)
+    toIQArray' a 0 iq = do
+      Just x <- readArray a 0
+        | Nothing => io_pure iq
+      Just y <- readArray a 1
+        | Nothing => io_pure iq
+      ignore $ writeArray iq 0 (toIQ x y)
+      io_pure iq
+    toIQArray' a (S i) iq = do
+      Just x <- readArray a (cast (2*i))
+        | Nothing => io_pure iq
+      Just y <- readArray a (cast (2*i)+1)
+        | Nothing => io_pure iq
+      ignore $ writeArray iq (cast i) (toIQ x y)
+      toIQArray' a i iq
+
+    halflen : Int
+    halflen = (max s) `div` 2
+
+    mkIQArray : Int -> IO (IOArray IQ)
+    mkIQArray i = do
+      a <- newArray i
+      io_pure a
+  in
+    toIQArray' s (cast halflen) =<< mkIQArray halflen
 
 ||| Read samples from the device synchronously.
 |||
@@ -59,7 +84,7 @@ readSync h b = do
 ||| Call callback closure type signature
 public export
 ReadAsyncFn : Type
-ReadAsyncFn = AnyPtr -> List IQ -> IO ()
+ReadAsyncFn = AnyPtr -> IOArray IQ -> IO ()
 
 ||| Read samples from the device asynchronously. This will block until
 ||| it is being canceled using `cancelAsync`.
@@ -76,7 +101,7 @@ export
 readAsync : Ptr RtlSdrHandle -> ReadAsyncFn -> AnyPtr -> Int -> Int -> IO (Either RTLSDR_ERROR ())
 readAsync h cbIO ctx bn bl = do
   let cbPrim = \bufPtr, bufLen, ctxPtr => toPrim $
-        cbIO ctxPtr =<< ((io_pure . toIQList) =<< readBufPtr' bufPtr bufLen)
+        cbIO ctxPtr =<< (toIQArray =<< readBufPtr' bufPtr bufLen)
   r <- fromPrim $ read_async h cbPrim ctx bn bl
   io_pure $ if r == 0 then Right () else Left RtlSdrError
 
